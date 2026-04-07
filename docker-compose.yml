@@ -1,0 +1,17 @@
+services:
+  messenger:
+    build: .
+    ports:
+      - "50505:50505"
+    volumes:
+      - ./data:/app/data
+      - ./frontend:/app/frontend
+    environment:
+      - DB_DIR=/app/data/
+      - JWT_SECRET=supersecretkey2000
+      - PORT=50505
+    restart: unless-stopped
+
+volumes:
+  messenger_data:
+    driver: local
