@@ -110,7 +110,7 @@ func init() {
     FOREIGN KEY (userID) REFERENCES users(id) ON DELETE CASCADE
 );`
 
-	// Индексы для ускорения запросов
+	// Индексы (для ускорения запросов)
 	createIndexesSQL := `
 		CREATE INDEX IF NOT EXISTS idx_messages_roomID ON messages(roomID);
 		CREATE INDEX IF NOT EXISTS idx_messages_createdDateTime ON messages(createdDateTime);
@@ -186,25 +186,12 @@ func CreateUser(login, nickname, password string) (int64, error) {
 	if login == "" {
 		return 0, fmt.Errorf("login cannot be empty")
 	}
-	//if password == "" {
-	//	return 0, fmt.Errorf("password cannot be empty")
-	//}
 	if len(password) < MinPasswordLength {
 		return 0, fmt.Errorf("password must be at least 6 characters")
 	}
 	if nickname == "" {
 		nickname = login
 	}
-
-	//var exists bool
-	//checkQuery := `SELECT EXISTS(SELECT 1 FROM users WHERE login = ?)`
-	//err := db.QueryRow(checkQuery, login).Scan(&exists)
-	//if err != nil {
-	//	return 0, fmt.Errorf("failed to check user existence: %w", err)
-	//}
-	//if exists {
-	//	return 0, fmt.Errorf("user with login '%s' already exists", login)
-	//}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -215,7 +202,7 @@ func CreateUser(login, nickname, password string) (int64, error) {
 	result, err := db.Exec(query, login, nickname, hashedPassword)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-			return 0, fmt.Errorf("user with login '%s' already exists", login)
+			return 0, fmt.Errorf("user with already exists")
 		}
 		return 0, fmt.Errorf("failed to create user: %w", err)
 	}
@@ -284,19 +271,16 @@ func DeleteUserWithoutLink(userID int) error {
 	}
 	defer tx.Rollback()
 
-	// 1. Отвязываем сообщения от пользователя (устанавливаем NULL)
 	_, err = tx.Exec(`UPDATE messages SET userID = NULL WHERE userID = ?`, userID)
 	if err != nil {
 		return err
 	}
 
-	// 2. Удаляем пользователя из комнат
 	_, err = tx.Exec(`DELETE FROM room_members WHERE userID = ?`, userID)
 	if err != nil {
 		return err
 	}
 
-	// 3. Удаляем самого пользователя
 	_, err = tx.Exec(`DELETE FROM users WHERE id = ?`, userID)
 	if err != nil {
 		return err
@@ -484,21 +468,17 @@ func CreateMessage(roomID, userID int, content string) (int64, error) {
 	return result.LastInsertId()
 }
 
-// Отметить сообщение как прочитанное
 func MarkMessageAsRead(messageID, userID int) error {
-	// Проверяем, существует ли сообщение
 	var messageUserID int
 	err := db.QueryRow(`SELECT userID FROM messages WHERE id = ?`, messageID).Scan(&messageUserID)
 	if err != nil {
 		return err
 	}
 
-	// Не отмечаем свои сообщения
 	if messageUserID == userID {
 		return nil
 	}
 
-	// Добавляем запись о прочтении
 	query := `
         INSERT OR IGNORE INTO message_reads (messageID, userID, read_at) 
         VALUES (?, ?, CURRENT_TIMESTAMP)
@@ -507,7 +487,6 @@ func MarkMessageAsRead(messageID, userID int) error {
 	return err
 }
 
-// Отметить все сообщения в комнате как прочитанные
 func MarkRoomMessagesAsRead(roomID, userID int) error {
 	query := `
         INSERT OR IGNORE INTO message_reads (messageID, userID, read_at)
@@ -553,13 +532,12 @@ func GetRoomMessagesWithReadStatus(roomID, currentUserID int, limit, offset int)
 			return nil, err
 		}
 		msg.UserNickname = nickname
-		msg.IsRead = true // всегда true, потому что мы только что отметили
+		msg.IsRead = true 
 		messages = append(messages, msg)
 	}
 	return messages, nil
 }
 
-// Получить количество непрочитанных сообщений в комнате
 func GetUnreadCount(roomID, userID int) (int, error) {
 	query := `
         SELECT COUNT(*)
@@ -572,7 +550,6 @@ func GetUnreadCount(roomID, userID int) (int, error) {
 	return count, err
 }
 
-// Получить общее количество непрочитанных сообщений для пользователя
 func GetTotalUnreadCount(userID int) (int, error) {
 	query := `
         SELECT COUNT(*)
@@ -586,7 +563,6 @@ func GetTotalUnreadCount(userID int) (int, error) {
 	return count, err
 }
 
-// Получить список пользователей, которые прочитали сообщение
 func GetMessageReaders(messageID int) ([]User, error) {
 	query := `
         SELECT u.id, u.login, u.nickname, u.registerdate, u.lastTimeOnline
@@ -614,7 +590,6 @@ func GetMessageReaders(messageID int) ([]User, error) {
 	return users, nil
 }
 
-// Получить время прочтения сообщения пользователем
 func GetMessageReadTime(messageID, userID int) (time.Time, error) {
 	var readAt time.Time
 	query := `SELECT read_at FROM message_reads WHERE messageID = ? AND userID = ?`
@@ -622,7 +597,6 @@ func GetMessageReadTime(messageID, userID int) (time.Time, error) {
 	return readAt, err
 }
 
-// Проверить, все ли участники комнаты прочитали сообщение
 func IsMessageReadByAllMembers(messageID int) (bool, error) {
 	query := `
         SELECT COUNT(DISTINCT rm.userID) = COUNT(DISTINCT mr.userID)
@@ -636,7 +610,6 @@ func IsMessageReadByAllMembers(messageID int) (bool, error) {
 	return isReadByAll, err
 }
 
-// Проверить, прочитано ли сообщение конкретным пользователем
 func IsMessageReadByUser(messageID, userID int) (bool, error) {
 	var exists bool
 	query := `

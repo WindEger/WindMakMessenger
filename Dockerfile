@@ -30,7 +30,7 @@ WORKDIR /app
 COPY --from=builder /build/messenger .
 
 # Copy frontend folder
-#COPY --from=builder /build/frontend ./frontend/
+COPY --from=builder /build/frontend ./frontend/
 
 # Create volume directory for database with proper permissions
 RUN mkdir -p /app/data && chmod 755 /app/data

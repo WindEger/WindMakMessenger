@@ -26,10 +26,9 @@ func init() {
 	cleanAttempts()
 }
 
-func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func RegisterHandler(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
+		return fmt.Errorf("method not allowed")
 	}
 
 	var req struct {
@@ -39,37 +38,36 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		RepeatPassword string `json:"repeatPassword"`
 	}
 
-	if req.Password != req.RepeatPassword {
-		http.Error(w, "Passwords do not match", http.StatusBadRequest)
-		return
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return fmt.Errorf("invalid JSON: %w", err)
 	}
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
+	if req.Password != req.RepeatPassword {
+		return fmt.Errorf("passwords do not match")
 	}
 
 	if req.Login == "" {
-		http.Error(w, "login is required", http.StatusBadRequest)
-		return
+		return fmt.Errorf("login is required")
 	}
 
-	if req.Password == "" {
-		http.Error(w, "password is required", http.StatusBadRequest)
-		return
+	if len(req.Password) < MinPasswordLength {
+		return fmt.Errorf("password must be at least %d characters", MinPasswordLength)
+	}
+
+	if req.Nickname == "" {
+		req.Nickname = req.Login
 	}
 
 	_, err := CreateUser(req.Login, req.Nickname, req.Password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return fmt.Errorf("failed to create user: %w", err)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "User registered successfully",
+	SendSuccess(w, http.StatusCreated, "User registered successfully", map[string]interface{}{
+		"login":    req.Login,
+		"nickname": req.Nickname,
 	})
+	return nil
 }
 
 var loginAttempts = sync.Map{}
@@ -80,10 +78,9 @@ type attempt struct {
 	last  time.Time
 }
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func LoginHandler(w http.ResponseWriter, r *http.Request) error {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
+		return fmt.Errorf("method not allowed")
 	}
 
 	var req struct {
@@ -92,13 +89,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid JSON", http.StatusBadRequest)
-		return
+		return fmt.Errorf("invalid JSON: %w", err)
 	}
 
 	if req.Login == "" {
-		http.Error(w, "Login required", http.StatusBadRequest)
-		return
+		return fmt.Errorf("login is required")
 	}
 
 	if val, ok := loginAttempts.Load(req.Login); ok {
@@ -109,36 +104,28 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		a.mu.Unlock()
 
 		if count >= 5 && time.Since(last) < 15*time.Minute {
-			http.Error(w, "Too many attempts for this login", http.StatusTooManyRequests)
-			return
+			return fmt.Errorf("too many failed attempts")
 		}
 	}
 
 	storedHash, err := GetUserPasswordHash(req.Login)
 	if err != nil {
 		incrementAttempts(req.Login)
-		http.Error(w, "Invalid login or password", http.StatusUnauthorized)
-		return
+		return fmt.Errorf("invalid login or password")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(storedHash), []byte(req.Password)); err != nil {
 		incrementAttempts(req.Login)
-		http.Error(w, "Invalid login or password", http.StatusUnauthorized)
-		return
+		return fmt.Errorf("invalid login or password")
 	}
 
 	loginAttempts.Delete(req.Login)
 
 	user, err := GetUserByLogin(req.Login)
 	if err != nil {
-		http.Error(w, "Invalid login or password", http.StatusUnauthorized)
-		return
+		return fmt.Errorf("user not found")
 	}
 
-	//token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-	//	"user_id": user.ID,
-	//	"exp":     time.Now().Add(15 * time.Minute).Unix(),
-	//})
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id": user.ID,
 		"exp":     time.Now().Add(15 * time.Minute).Unix(),
@@ -149,14 +136,15 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	tokenString, err := token.SignedString(jwtSecret)
 	if err != nil {
-		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
-		return
+		return fmt.Errorf("failed to generate token")
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"token": tokenString,
+	SendSuccess(w, http.StatusOK, "Login successful", map[string]interface{}{
+		"token":    tokenString,
+		"login":    user.Login,
+		"nickname": user.Nickname,
 	})
+	return nil
 }
 
 func incrementAttempts(login string) {
