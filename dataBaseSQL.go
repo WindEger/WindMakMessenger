@@ -573,14 +573,14 @@ func GetRoomMessagesWithStatusOfRead(roomID, currentUserID int, limit, offset in
 
 	query := `
         SELECT 
-            m.id, m.roomID, m.userID, m.content, m.createdDateTime,
-            COALESCE(u.nickname, u.login) as nickname,
-            1 as is_read
-        FROM messages m
-        JOIN users u ON m.userID = u.id
-        WHERE m.roomID = ?
-        ORDER BY m.createdDateTime DESC
-        LIMIT ? OFFSET ?
+			m.id, m.roomID, m.userID, m.content, m.createdDateTime,
+			COALESCE(u.nickname, u.login) as nickname,
+			CASE WHEN mr.userID IS NOT NULL THEN 1 ELSE 0 END as is_read
+		FROM messages m
+		JOIN users u ON m.userID = u.id
+		LEFT JOIN message_reads mr ON m.id = mr.messageID AND mr.userID = ?
+		WHERE m.roomID = ?
+		ORDER BY m.createdDateTime DESC
     `
 	rows, err := db.Query(query, roomID, limit, offset)
 	if err != nil {
