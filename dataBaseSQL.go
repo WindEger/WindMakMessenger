@@ -13,7 +13,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-const MinPasswordLength = 6
+var MinPasswordLength = 6
+
+var (
+	MinLenRoomName = 1
+	MaxLenRoomName = 100
+)
 
 type User struct {
 	ID             int
@@ -188,7 +193,6 @@ func init() {
 }
 
 // Users
-
 func CreateUser(login, nickname, password string) (int64, error) {
 	if login == "" {
 		return 0, fmt.Errorf("login cannot be empty")
@@ -297,17 +301,35 @@ func DeleteUserWithoutLink(userID int) error {
 }
 
 // Rooms
-
 func CreateRoom(roomName string, createdBy int) (int64, error) {
+	if len(roomName) > MaxLenRoomName {
+		return 0, fmt.Errorf("room name too long (max 100 characters)")
+	}
+	if len(roomName) < MinLenRoomName {
+		roomName = "New Room"
+	}
+
+	if strings.ContainsAny(roomName, "\\/<>\"'|?*") {
+		return 0, fmt.Errorf("room name contains invalid characters")
+	}
+
 	query := `INSERT INTO rooms (roomName, createdBy) VALUES (?, ?)`
 	result, err := db.Exec(query, roomName, createdBy)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to create room: %w", err)
 	}
-	roomID, _ := result.LastInsertId()
+
+	roomID, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("failed to get room ID: %w", err)
+	}
 
 	err = AddMemberToRoom(int(roomID), createdBy)
-	return roomID, err
+	if err != nil {
+		return 0, fmt.Errorf("failed to add creator to room: %w", err)
+	}
+
+	return roomID, nil
 }
 
 func AddMemberToRoom(roomID, userID int) error {

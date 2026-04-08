@@ -6,8 +6,6 @@ import (
 	"net/http"
 )
 
-
-
 func HandleErrors(next func(http.ResponseWriter, *http.Request) error) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := next(w, r)
@@ -18,16 +16,10 @@ func HandleErrors(next func(http.ResponseWriter, *http.Request) error) http.Hand
 	}
 }
 
-func SendJSONResponse(w http.ResponseWriter, statusCode int, response OutgoingMessage) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(response)
-}
-
 func SendSuccess(w http.ResponseWriter, statusCode int, message string, data interface{}) {
 	SendJSONResponse(w, statusCode, OutgoingMessage{
 		Success: true,
-		Action: message,
+		Action:  message,
 		Data:    data,
 	})
 }
@@ -37,4 +29,12 @@ func SendError(w http.ResponseWriter, message string, statusCode int) {
 		Success: false,
 		Error:   message,
 	})
+}
+
+func SendJSONResponse(w http.ResponseWriter, statusCode int, response OutgoingMessage) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Failed to encode JSON response: %v", err)
+	}
 }
