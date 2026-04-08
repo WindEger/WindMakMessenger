@@ -18,6 +18,11 @@ import (
 // var JWT_SECRET = "test"
 var jwtSecret = []byte(os.Getenv("JWT_SECRET")) //[]byte(JWT_SECRET)
 
+var (
+	MaxLoginAttempts = 5
+	LoginBanDuration = 15 * time.Minute
+)
+
 func init() {
 	if len(jwtSecret) == 0 {
 		log.Fatal("JWT_SECRET environment variable is not set")
@@ -103,7 +108,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) error {
 		last := a.last
 		a.mu.Unlock()
 
-		if count >= 5 && time.Since(last) < 15*time.Minute {
+		if count >= MaxLoginAttempts && time.Since(last) < LoginBanDuration {
 			return fmt.Errorf("too many failed attempts")
 		}
 	}
@@ -165,7 +170,6 @@ func cleanAttempts() {
 				a.mu.Lock()
 				shouldDelete := time.Since(a.last) > 1*time.Hour
 				a.mu.Unlock()
-
 				if shouldDelete {
 					loginAttempts.Delete(key)
 				}
@@ -199,4 +203,35 @@ func ValidateToken(tokenString string) (jwt.MapClaims, error) {
 	}
 
 	return claims, nil
+}
+
+func checkTokenAndGetUserIDFromRequest(r *http.Request) (int, error) {
+	// Извлекает токен из query параметра или заголовка
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		token = r.Header.Get("Authorization")
+	}
+
+	if token == "" {
+		return 0, fmt.Errorf("missing token")
+	}
+
+	token = strings.TrimPrefix(token, "Bearer ")
+
+	claims, err := ValidateToken(token)
+	if err != nil {
+		return 0, fmt.Errorf("invalid token: %w", err)
+	}
+
+	rawID, ok := claims["user_id"]
+	if !ok {
+		return 0, fmt.Errorf("invalid token claims: user_id missing")
+	}
+
+	userIDFloat, ok := rawID.(float64)
+	if !ok {
+		return 0, fmt.Errorf("invalid user_id type in token")
+	}
+
+	return int(userIDFloat), nil
 }

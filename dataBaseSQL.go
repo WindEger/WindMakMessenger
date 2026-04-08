@@ -30,14 +30,21 @@ type Room struct {
 	CreatedDateTime time.Time
 	UpdatedAt       time.Time
 }
+
+type RoomWithMeta struct {
+	Room
+	UnreadCount int
+	LastMessage *Message
+}
+
 type Message struct {
-	ID              int
-	RoomID          int
-	UserID          int
-	Content         string
-	CreatedDateTime time.Time
-	UserNickname    string
-	IsRead          bool
+	ID              int       `json:"id"`
+	RoomID          int       `json:"room_id"`
+	UserID          int       `json:"user_id"`
+	Content         string    `json:"content"`
+	CreatedDateTime time.Time `json:"created_at"`
+	UserNickname    string    `json:"nickname"`
+	IsRead          bool      `json:"is_read"`
 }
 
 var db *sql.DB
@@ -110,7 +117,7 @@ func init() {
     FOREIGN KEY (userID) REFERENCES users(id) ON DELETE CASCADE
 );`
 
-	// Индексы (для ускорения запросов)
+	// Индексы для ускорения запросов
 	createIndexesSQL := `
 		CREATE INDEX IF NOT EXISTS idx_messages_roomID ON messages(roomID);
 		CREATE INDEX IF NOT EXISTS idx_messages_createdDateTime ON messages(createdDateTime);
@@ -342,6 +349,30 @@ func GetUserRooms(userID int) ([]Room, error) {
 	return rooms, nil
 }
 
+func getUserRoomsWithMeta(userID int) ([]RoomWithMeta, error) {
+	rooms, err := GetUserRooms(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make([]RoomWithMeta, 0, len(rooms))
+	for _, r := range rooms {
+		meta := RoomWithMeta{Room: r}
+
+		unread, _ := GetUnreadCount(r.ID, userID)
+		meta.UnreadCount = unread
+
+		msgs, err := GetRoomMessagesWithStatusOfRead(r.ID, userID, 1, 0)
+		if err == nil && len(msgs) > 0 {
+			m := msgs[0]
+			meta.LastMessage = &m
+		}
+
+		result = append(result, meta)
+	}
+	return result, nil
+}
+
 func UpdateRoomName(roomID int, newName string) error {
 	query := `UPDATE rooms SET roomName = ? WHERE id = ?`
 	_, err := db.Exec(query, newName, roomID)
@@ -368,19 +399,20 @@ func LeaveRoom(roomID, userID int) error {
 		return err
 	}
 
-	memberCount, err := GetRoomMemberCount(roomID)
+	//memberCount, err := GetRoomMemberCount(roomID)
+	hasAnyMembers, err := HasAnyMembers(roomID)
 	if err != nil {
 		return err
 	}
 
-	if memberCount == 0 {
+	if !hasAnyMembers { //memberCount == 0 {
 		err = DeleteRoomAndAllLink(roomID)
 		if err != nil {
 			return err
 		}
 		log.Printf("Room %d was deleted because no members left", roomID)
 	} else {
-		log.Printf("User %d left room %d, %d members remaining", userID, roomID, memberCount)
+		log.Printf("User %d left room %d", userID, roomID)
 	}
 	return nil
 }
@@ -422,17 +454,31 @@ func GetRoomMembers(roomID int) ([]User, error) {
 	return users, nil
 }
 
+//func IsUserInRoom(roomID, userID int) (bool, error) {
+//	var count int
+//	query := `SELECT COUNT(*) FROM room_members WHERE roomID = ? AND userID = ?`
+//	err := db.QueryRow(query, roomID, userID).Scan(&count)
+//	return count > 0, err
+//}
+
 func IsUserInRoom(roomID, userID int) (bool, error) {
-	var count int
-	query := `SELECT COUNT(*) FROM room_members WHERE roomID = ? AND userID = ?`
-	err := db.QueryRow(query, roomID, userID).Scan(&count)
-	return count > 0, err
+	var exists bool
+	query := `SELECT EXISTS(SELECT 1 FROM room_members WHERE roomID = ? AND userID = ?)`
+	err := db.QueryRow(query, roomID, userID).Scan(&exists)
+	return exists, err
 }
 
 func GetRoomMemberCount(roomID int) (int, error) {
 	var count int
 	err := db.QueryRow(`SELECT COUNT(*) FROM room_members WHERE roomID = ?`, roomID).Scan(&count)
 	return count, err
+}
+
+func HasAnyMembers(roomID int) (bool, error) {
+	var exists bool
+	query := `SELECT EXISTS(SELECT 1 FROM room_members WHERE roomID = ? LIMIT 1)`
+	err := db.QueryRow(query, roomID).Scan(&exists)
+	return exists, err
 }
 
 // Messages
@@ -497,7 +543,7 @@ func MarkRoomMessagesAsRead(roomID, userID int) error {
 	return err
 }
 
-func GetRoomMessagesWithReadStatus(roomID, currentUserID int, limit, offset int) ([]Message, error) {
+func GetRoomMessagesWithStatusOfRead(roomID, currentUserID int, limit, offset int) ([]Message, error) {
 	err := MarkRoomMessagesAsRead(roomID, currentUserID)
 	if err != nil {
 		log.Printf("Warning: failed to mark messages as read: %v", err)
@@ -532,7 +578,7 @@ func GetRoomMessagesWithReadStatus(roomID, currentUserID int, limit, offset int)
 			return nil, err
 		}
 		msg.UserNickname = nickname
-		msg.IsRead = true 
+		msg.IsRead = true
 		messages = append(messages, msg)
 	}
 	return messages, nil
