@@ -324,7 +324,7 @@ func (c *Client) CreateRoomAction(inc IncomingMessage) {
 		c.emit(errMsg("create_room", err))
 		return
 	}
-	log.Printf("User %s create room: id: %s, roomName: %s", c.userID, roomID, p.RoomName)
+	log.Printf("User %d create room: id: %d, roomName: %s", c.userID, roomID, p.RoomName)
 
 	rooms, err := getUserRoomsWithMeta(c.userID)
 	if err != nil {
