@@ -11,6 +11,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var (
+	GetMessagesLimit = 200
+)
+
 // Upgrader
 
 var upgrader = websocket.Upgrader{
@@ -221,7 +225,7 @@ func (c *Client) GetMessagesAction(inc IncomingMessage) {
 		c.emit(errMsg("get_messages", fmt.Errorf("invalid payload")))
 		return
 	}
-	if p.Limit <= 0 || p.Limit > 200 {
+	if p.Limit <= 0 || p.Limit > GetMessagesLimit {
 		p.Limit = 50
 	}
 
