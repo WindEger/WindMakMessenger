@@ -1,178 +1,251 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Messenger</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messenger</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="screen active">
+        <div class="auth-container">
+            <div class="auth-box">
+                <h1 class="auth-title">Messenger</h1>
+                
+                <!-- Login Form -->
+                <div id="login-form" class="auth-form active">
+                    <h2>Sign In</h2>
+                    <form id="login-submit">
+                        <div class="input-group">
+                            <label for="login-username">Username</label>
+                            <input type="text" id="login-username" required autocomplete="username">
+                        </div>
+                        <div class="input-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" required autocomplete="current-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Sign In</button>
+                        <div id="login-error" class="error-message"></div>
+                    </form>
+                    <p class="auth-switch">
+                        Don't have an account? 
+                        <a href="#" id="show-register">Sign Up</a>
+                    </p>
+                </div>
 
-<!-- Auth -->
-<div id="auth-screen">
-  <div class="auth-card">
-    <div class="auth-logo">MSNGR</div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Войти</button>
-      <button class="auth-tab" id="tab-register" onclick="switchTab('register')">Регистрация</button>
-    </div>
-    <form class="auth-form" id="form-login" onsubmit="doLogin(event)">
-      <div class="field-group">
-        <div class="field-label">Логин</div>
-        <input type="text" id="l-login" placeholder="username" autocomplete="username" />
-      </div>
-      <div class="field-group">
-        <div class="field-label">Пароль</div>
-        <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" />
-      </div>
-      <div class="auth-error" id="login-err"></div>
-      <button class="btn-primary" type="submit">ВОЙТИ</button>
-    </form>
-    <form class="auth-form hidden" id="form-register" onsubmit="doRegister(event)">
-      <div class="field-group">
-        <div class="field-label">Логин</div>
-        <input type="text" id="r-login" placeholder="username" autocomplete="username" />
-      </div>
-      <div class="field-group">
-        <div class="field-label">Никнейм</div>
-        <input type="text" id="r-nick" placeholder="Отображаемое имя" />
-      </div>
-      <div class="field-group">
-        <div class="field-label">Пароль</div>
-        <input type="password" id="r-pass" placeholder="минимум 6 символов" autocomplete="new-password" />
-      </div>
-      <div class="field-group">
-        <div class="field-label">Повторите пароль</div>
-        <input type="password" id="r-pass2" placeholder="••••••••" />
-      </div>
-      <div class="auth-error" id="reg-err"></div>
-      <button class="btn-primary" type="submit">СОЗДАТЬ АККАУНТ</button>
-    </form>
-  </div>
-</div>
-
-<!-- App -->
-<div id="app">
-  <!-- Sidebar -->
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <span class="conn-dot" id="conn-dot"></span>
-        MSNGR
-      </div>
-      <button class="icon-btn" title="Новый чат" onclick="openCreateRoom()">＋</button>
-    </div>
-    <div class="sidebar-me">
-      <div class="me-avatar" id="me-avatar">?</div>
-      <div class="me-info">
-        <div class="me-nick" id="me-nick">—</div>
-        <div class="me-login" id="me-login"></div>
-      </div>
-      <button class="logout-btn" onclick="doLogout()" title="Выйти">⏻</button>
-    </div>
-    <div class="rooms-label">Чаты</div>
-    <div class="rooms-list" id="rooms-list">
-      <div class="rooms-empty">нет чатов</div>
-    </div>
-  </div>
-
-  <!-- Chat -->
-  <div class="chat-area">
-    <div class="chat-placeholder" id="chat-placeholder">
-      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-      <p>выберите чат</p>
-    </div>
-
-    <div class="chat-main" id="chat-main" style="display:none">
-      <div class="chat-topbar">
-        <div class="chat-title-wrap">
-          <div class="chat-title" id="chat-title">—</div>
+                <!-- Register Form -->
+                <div id="register-form" class="auth-form">
+                    <h2>Sign Up</h2>
+                    <form id="register-submit">
+                        <div class="input-group">
+                            <label for="register-username">Username</label>
+                            <input type="text" id="register-username" required autocomplete="username">
+                        </div>
+                        <div class="input-group">
+                            <label for="register-nickname">Nickname</label>
+                            <input type="text" id="register-nickname" placeholder="Optional">
+                        </div>
+                        <div class="input-group">
+                            <label for="register-password">Password</label>
+                            <input type="password" id="register-password" required autocomplete="new-password">
+                        </div>
+                        <div class="input-group">
+                            <label for="register-repeat-password">Repeat Password</label>
+                            <input type="password" id="register-repeat-password" required autocomplete="new-password">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Sign Up</button>
+                        <div id="register-error" class="error-message"></div>
+                    </form>
+                    <p class="auth-switch">
+                        Already have an account? 
+                        <a href="#" id="show-login">Sign In</a>
+                    </p>
+                </div>
+            </div>
         </div>
-        <div class="topbar-actions">
-          <button class="icon-btn" title="Участники" id="btn-members">👥</button>
-          <button class="icon-btn" title="Добавить участника" id="btn-add-member">＋</button>
-          <button class="icon-btn" title="Переименовать" id="btn-rename">✎</button>
-          <button class="icon-btn" title="Покинуть чат" id="btn-leave" style="color:var(--red)">✕</button>
+    </div>
+
+    <!-- Main App Screen -->
+    <div id="app-screen" class="screen">
+        <div class="app-container">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h1 class="app-title">Messenger</h1>
+                    <div class="user-info">
+                        <span id="current-user-nickname"></span>
+                        <button id="logout-btn" class="btn-icon" title="Logout">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="rooms-controls">
+                    <button id="create-room-btn" class="btn btn-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        New Room
+                    </button>
+                </div>
+
+                <div id="rooms-list" class="rooms-list">
+                    <!-- Rooms will be loaded here -->
+                </div>
+            </aside>
+
+            <!-- Main Chat Area -->
+            <main class="main-chat">
+                <div id="no-room-selected" class="no-selection">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <p>Select a room to start messaging</p>
+                </div>
+
+                <div id="chat-container" class="chat-container" style="display: none;">
+                    <!-- Chat Header -->
+                    <div class="chat-header">
+                        <div class="chat-header-info">
+                            <h2 id="current-room-name">Room Name</h2>
+                            <span id="room-members-count" class="members-count">0 members</span>
+                        </div>
+                        <div class="chat-header-actions">
+                            <button id="show-members-btn" class="btn-icon" title="Members">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </button>
+                            <button id="rename-room-btn" class="btn-icon" title="Rename Room">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </button>
+                            <button id="leave-room-btn" class="btn-icon btn-danger" title="Leave Room">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                    <polyline points="16 17 21 12 16 7"/>
+                                    <line x1="21" y1="12" x2="9" y2="12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Messages Area -->
+                    <div id="messages-container" class="messages-container">
+                        <!-- Messages will be loaded here -->
+                    </div>
+
+                    <!-- Message Input -->
+                    <div class="message-input-container">
+                        <form id="send-message-form">
+                            <input 
+                                type="text" 
+                                id="message-input" 
+                                placeholder="Type a message..." 
+                                autocomplete="off"
+                                maxlength="5000"
+                            >
+                            <button type="submit" class="btn-send">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </main>
         </div>
-      </div>
-      <div class="messages-area" id="messages-area">
-        <div class="load-more-wrap" id="load-more-wrap">
-          <button class="load-more-btn" id="load-more-btn">Загрузить ещё</button>
+    </div>
+
+    <!-- Modals -->
+    
+    <!-- Create Room Modal -->
+    <div id="create-room-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Room</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="create-room-form">
+                <div class="input-group">
+                    <label for="new-room-name">Room Name</label>
+                    <input type="text" id="new-room-name" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create</button>
+                </div>
+            </form>
         </div>
-      </div>
-      <div class="chat-input-bar">
-        <div class="input-wrap">
-          <textarea id="msg-input" rows="1" placeholder="Сообщение... (Enter — отправить, Shift+Enter — новая строка)"></textarea>
+    </div>
+
+    <!-- Rename Room Modal -->
+    <div id="rename-room-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Rename Room</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="rename-room-form">
+                <div class="input-group">
+                    <label for="rename-room-name">New Room Name</label>
+                    <input type="text" id="rename-room-name" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Rename</button>
+                </div>
+            </form>
         </div>
-        <button class="send-btn" id="send-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-        </button>
-      </div>
     </div>
-  </div>
-</div>
 
-<!-- Modals -->
-<div class="modal-overlay hidden" id="modal-create-room">
-  <div class="modal-box">
-    <div class="modal-title">Новый чат</div>
-    <div class="field-group">
-      <div class="field-label">Название</div>
-      <input type="text" id="new-room-name" placeholder="Название чата" maxlength="80" />
+    <!-- Add Member Modal -->
+    <div id="add-member-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Member</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="add-member-form">
+                <div class="input-group">
+                    <label for="member-username">Username</label>
+                    <input type="text" id="member-username" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal('modal-create-room')">Отмена</button>
-      <button class="btn-primary btn-sm" onclick="doCreateRoom()">Создать</button>
-    </div>
-  </div>
-</div>
 
-<div class="modal-overlay hidden" id="modal-add-member">
-  <div class="modal-box">
-    <div class="modal-title">Добавить участника</div>
-    <div class="field-group">
-      <div class="field-label">Логин пользователя</div>
-      <input type="text" id="add-member-login" placeholder="username" />
+    <!-- Members List Modal -->
+    <div id="members-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Room Members</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div id="members-list" class="members-list">
+                <!-- Members will be loaded here -->
+            </div>
+            <div class="modal-actions">
+                <button id="add-member-btn" class="btn btn-primary">Add Member</button>
+                <button class="btn btn-secondary modal-cancel">Close</button>
+            </div>
+        </div>
     </div>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal('modal-add-member')">Отмена</button>
-      <button class="btn-primary btn-sm" onclick="doAddMember()">Добавить</button>
-    </div>
-  </div>
-</div>
 
-<div class="modal-overlay hidden" id="modal-rename">
-  <div class="modal-box">
-    <div class="modal-title">Переименовать чат</div>
-    <div class="field-group">
-      <div class="field-label">Новое название</div>
-      <input type="text" id="rename-input" placeholder="Название" maxlength="80" />
-    </div>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal('modal-rename')">Отмена</button>
-      <button class="btn-primary btn-sm" onclick="doRenameRoom()">Сохранить</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay hidden" id="modal-members">
-  <div class="modal-box">
-    <div class="modal-title">Участники</div>
-    <div class="members-list" id="members-list">
-      <div style="color:var(--text3);font-size:12px;font-family:var(--font-mono)">Загрузка...</div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn-ghost" onclick="closeModal('modal-members')">Закрыть</button>
-    </div>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<script src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>

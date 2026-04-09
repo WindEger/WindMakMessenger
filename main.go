@@ -19,7 +19,8 @@ func main() {
 	mux.HandleFunc("/ws", WSHandler)
 	mux.Handle("/", http.FileServer(http.Dir("./frontend")))
 
-	port := os.Getenv("PORT")
+	//port := os.Getenv("PORT")
+	port := "50505"
 	if port == "" {
 		port = "8080"
 	}

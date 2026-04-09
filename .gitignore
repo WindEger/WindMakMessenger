@@ -16,6 +16,7 @@ test/
 test1/
 test2/
 test3/
+frontend11/
 # Test binary, built with `go test -c`
 *.test
 

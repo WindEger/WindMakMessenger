@@ -566,52 +566,15 @@ func MarkRoomMessagesAsRead(roomID, userID int) error {
 	return err
 }
 
-// Простая функция - возвращает ВСЕ сообщения комнаты
-func GetAllMessagesByRoomID(roomID int) ([]Message, error) {
-    log.Printf("[DB] GetAllMessagesByRoomID: roomID=%d", roomID)
-    
-    query := `SELECT id, roomID, userID, content, createdDateTime FROM messages WHERE roomID = ? ORDER BY id ASC`
-    rows, err := db.Query(query, roomID)
-    if err != nil {
-        log.Printf("[DB] Query error: %v", err)
-        return nil, err
-    }
-    defer rows.Close()
-    
-    var messages []Message
-    for rows.Next() {
-        var msg Message
-        err := rows.Scan(&msg.ID, &msg.RoomID, &msg.UserID, &msg.Content, &msg.CreatedDateTime)
-        if err != nil {
-            log.Printf("[DB] Scan error: %v", err)
-            continue
-        }
-        
-        // Добавляем никнейм отдельно простым запросом
-        var nickname string
-        db.QueryRow("SELECT nickname FROM users WHERE id = ?", msg.UserID).Scan(&nickname)
-        msg.UserNickname = nickname
-        
-        messages = append(messages, msg)
-        log.Printf("[DB] Message found: ID=%d, UserID=%d, Content=%s", msg.ID, msg.UserID, msg.Content)
-    }
-    
-    log.Printf("[DB] Total messages found: %d", len(messages))
-    return messages, nil
-}
-
-// Функция для получения сообщений со статусом прочтения
 func GetRoomMessagesWithStatusOfRead(roomID, currentUserID int, limit, offset int) ([]Message, error) {
     log.Printf("[DB] GetRoomMessagesWithStatusOfRead: roomID=%d, currentUserID=%d, limit=%d, offset=%d", 
         roomID, currentUserID, limit, offset)
     
-    // Сначала отмечаем сообщения как прочитанные
     err := MarkRoomMessagesAsRead(roomID, currentUserID)
     if err != nil {
         log.Printf("Warning: failed to mark messages as read: %v", err)
     }
     
-    // Запрос с правильными именами колонок и LIMIT/OFFSET
     query := `
         SELECT 
             m.id,

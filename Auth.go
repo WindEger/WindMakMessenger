@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -15,8 +14,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// var JWT_SECRET = "test"
-var jwtSecret = []byte(os.Getenv("JWT_SECRET")) //[]byte(JWT_SECRET)
+var JWT_SECRET = "test"
+var jwtSecret = []byte(JWT_SECRET)
+
+//var jwtSecret = []byte(os.Getenv("JWT_SECRET")) //[]byte(JWT_SECRET)
 
 var (
 	MaxLoginAttempts = 5
