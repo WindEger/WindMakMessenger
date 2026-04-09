@@ -56,8 +56,8 @@ var db *sql.DB
 
 func init() {
 	var err error
-	dbDir := os.Getenv("DB_DIR")
-	//dbDir := "./data"
+	//dbDir := os.Getenv("DB_DIR")
+	dbDir := "./data"
 	if dbDir == "" {
 		dbDir = "./data"
 		log.Println("DB_DIR not set, using default.")
@@ -486,6 +486,7 @@ func GetRoomMembers(roomID int) ([]User, error) {
 func IsUserInRoom(roomID, userID int) (bool, error) {
 	var exists bool
 	query := `SELECT EXISTS(SELECT 1 FROM room_members WHERE roomID = ? AND userID = ?)`
+	
 	err := db.QueryRow(query, roomID, userID).Scan(&exists)
 	return exists, err
 }
@@ -565,45 +566,109 @@ func MarkRoomMessagesAsRead(roomID, userID int) error {
 	return err
 }
 
+// Простая функция - возвращает ВСЕ сообщения комнаты
+func GetAllMessagesByRoomID(roomID int) ([]Message, error) {
+    log.Printf("[DB] GetAllMessagesByRoomID: roomID=%d", roomID)
+    
+    query := `SELECT id, roomID, userID, content, createdDateTime FROM messages WHERE roomID = ? ORDER BY id ASC`
+    rows, err := db.Query(query, roomID)
+    if err != nil {
+        log.Printf("[DB] Query error: %v", err)
+        return nil, err
+    }
+    defer rows.Close()
+    
+    var messages []Message
+    for rows.Next() {
+        var msg Message
+        err := rows.Scan(&msg.ID, &msg.RoomID, &msg.UserID, &msg.Content, &msg.CreatedDateTime)
+        if err != nil {
+            log.Printf("[DB] Scan error: %v", err)
+            continue
+        }
+        
+        // Добавляем никнейм отдельно простым запросом
+        var nickname string
+        db.QueryRow("SELECT nickname FROM users WHERE id = ?", msg.UserID).Scan(&nickname)
+        msg.UserNickname = nickname
+        
+        messages = append(messages, msg)
+        log.Printf("[DB] Message found: ID=%d, UserID=%d, Content=%s", msg.ID, msg.UserID, msg.Content)
+    }
+    
+    log.Printf("[DB] Total messages found: %d", len(messages))
+    return messages, nil
+}
+
+// Функция для получения сообщений со статусом прочтения
 func GetRoomMessagesWithStatusOfRead(roomID, currentUserID int, limit, offset int) ([]Message, error) {
-	err := MarkRoomMessagesAsRead(roomID, currentUserID)
-	if err != nil {
-		log.Printf("Warning: failed to mark messages as read: %v", err)
-	}
-
-	query := `
+    log.Printf("[DB] GetRoomMessagesWithStatusOfRead: roomID=%d, currentUserID=%d, limit=%d, offset=%d", 
+        roomID, currentUserID, limit, offset)
+    
+    // Сначала отмечаем сообщения как прочитанные
+    err := MarkRoomMessagesAsRead(roomID, currentUserID)
+    if err != nil {
+        log.Printf("Warning: failed to mark messages as read: %v", err)
+    }
+    
+    // Запрос с правильными именами колонок и LIMIT/OFFSET
+    query := `
         SELECT 
-			m.id, m.roomID, m.userID, m.content, m.createdDateTime,
-			COALESCE(u.nickname, u.login) as nickname,
-			CASE WHEN mr.userID IS NOT NULL THEN 1 ELSE 0 END as is_read
-		FROM messages m
-		JOIN users u ON m.userID = u.id
-		LEFT JOIN message_reads mr ON m.id = mr.messageID AND mr.userID = ?
-		WHERE m.roomID = ?
-		ORDER BY m.createdDateTime DESC
+            m.id,
+            m.roomID,
+            m.userID,
+            m.content,
+            m.createdDateTime,
+            COALESCE(u.nickname, u.login) as nickname,
+            CASE 
+                WHEN m.userID = ? THEN 1  -- Свои сообщения всегда считаем прочитанными
+                WHEN mr.userID IS NOT NULL THEN 1 
+                ELSE 0 
+            END as is_read
+        FROM messages m
+        JOIN users u ON m.userID = u.id
+        LEFT JOIN message_reads mr ON m.id = mr.messageID AND mr.userID = ?
+        WHERE m.roomID = ?
+        ORDER BY m.createdDateTime DESC
+        LIMIT ? OFFSET ?
     `
-	rows, err := db.Query(query, roomID, limit, offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var messages []Message
-	for rows.Next() {
-		var msg Message
-		var nickname string
-		var isRead int
-
-		err := rows.Scan(&msg.ID, &msg.RoomID, &msg.UserID, &msg.Content,
-			&msg.CreatedDateTime, &nickname, &isRead)
-		if err != nil {
-			return nil, err
-		}
-		msg.UserNickname = nickname
-		msg.IsRead = true
-		messages = append(messages, msg)
-	}
-	return messages, nil
+    
+    rows, err := db.Query(query, currentUserID, currentUserID, roomID, limit, offset)
+    if err != nil {
+        log.Printf("[DB] Query error: %v", err)
+        return nil, err
+    }
+    defer rows.Close()
+    
+    var messages []Message
+    for rows.Next() {
+        var msg Message
+        var nickname string
+        var isRead int
+        
+        err := rows.Scan(
+            &msg.ID, 
+            &msg.RoomID, 
+            &msg.UserID, 
+            &msg.Content,
+            &msg.CreatedDateTime, 
+            &nickname, 
+            &isRead,
+        )
+        if err != nil {
+            log.Printf("[DB] Scan error: %v", err)
+            return nil, err
+        }
+        
+        msg.UserNickname = nickname
+        msg.IsRead = isRead == 1
+        
+        messages = append(messages, msg)
+        log.Printf("[DB] Message: ID=%d, IsRead=%v", msg.ID, msg.IsRead)
+    }
+    
+    log.Printf("[DB] Returning %d messages", len(messages))
+    return messages, nil
 }
 
 func GetUnreadCount(roomID, userID int) (int, error) {
