@@ -56,8 +56,8 @@ var db *sql.DB
 
 func init() {
 	var err error
-	//dbDir := os.Getenv("DB_DIR")
-	dbDir := "./data"
+	dbDir := os.Getenv("DB_DIR")
+	//dbDir := "./data"
 	if dbDir == "" {
 		dbDir = "./data"
 		log.Println("DB_DIR not set, using default.")
