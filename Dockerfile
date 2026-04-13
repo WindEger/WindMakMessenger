@@ -1,19 +1,16 @@
 # Build stage
 FROM golang:1.25.6 AS builder
 
-WORKDIR /build
+WORKDIR /app
 
-# Copy go mod files
 COPY go.mod go.sum ./
 
-# Download dependencies
 RUN go mod download
 
-# Copy source code
 COPY . .
 
-# Build the application with CGO enabled for SQLite
-RUN CGO_ENABLED=1 go build -o messenger .
+# CGO enabled for SQLite
+RUN CGO_ENABLED=1 go build -o messengerserver .
 
 # Runtime stage
 FROM debian:bookworm-slim
@@ -27,10 +24,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # Copy the binary from builder
-COPY --from=builder /build/messenger .
+COPY --from=builder /app/messengerserver .
 
 # Copy frontend folder
-COPY --from=builder /build/frontend ./frontend/
+COPY --from=builder /app/frontend ./frontend/
 
 # Create volume directory for database with proper permissions
 RUN mkdir -p /app/data && chmod 755 /app/data
@@ -39,4 +36,4 @@ RUN mkdir -p /app/data && chmod 755 /app/data
 EXPOSE 50505
 
 # Set the entrypoint
-ENTRYPOINT ["./messenger"]
+ENTRYPOINT ["./messengerserver"]

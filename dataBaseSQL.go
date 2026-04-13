@@ -42,6 +42,7 @@ type RoomWithMeta struct {
 	LastMessage *Message
 }
 
+// `json:"-"`  // Никогда не будет в JSON
 type Message struct {
 	ID              int       `json:"id"`
 	RoomID          int       `json:"room_id"`
@@ -120,7 +121,7 @@ func init() {
     PRIMARY KEY (messageID, userID),
     FOREIGN KEY (messageID) REFERENCES messages(id) ON DELETE CASCADE,
     FOREIGN KEY (userID) REFERENCES users(id) ON DELETE CASCADE
-);`
+	);`
 
 	// Индексы для ускорения запросов
 	createIndexesSQL := `
@@ -486,7 +487,7 @@ func GetRoomMembers(roomID int) ([]User, error) {
 func IsUserInRoom(roomID, userID int) (bool, error) {
 	var exists bool
 	query := `SELECT EXISTS(SELECT 1 FROM room_members WHERE roomID = ? AND userID = ?)`
-	
+
 	err := db.QueryRow(query, roomID, userID).Scan(&exists)
 	return exists, err
 }
@@ -567,15 +568,15 @@ func MarkRoomMessagesAsRead(roomID, userID int) error {
 }
 
 func GetRoomMessagesWithStatusOfRead(roomID, currentUserID int, limit, offset int) ([]Message, error) {
-    log.Printf("[DB] GetRoomMessagesWithStatusOfRead: roomID=%d, currentUserID=%d, limit=%d, offset=%d", 
-        roomID, currentUserID, limit, offset)
-    
-    err := MarkRoomMessagesAsRead(roomID, currentUserID)
-    if err != nil {
-        log.Printf("Warning: failed to mark messages as read: %v", err)
-    }
-    
-    query := `
+	log.Printf("[DB] GetRoomMessagesWithStatusOfRead: roomID=%d, currentUserID=%d, limit=%d, offset=%d",
+		roomID, currentUserID, limit, offset)
+
+	err := MarkRoomMessagesAsRead(roomID, currentUserID)
+	if err != nil {
+		log.Printf("Warning: failed to mark messages as read: %v", err)
+	}
+
+	query := `
         SELECT 
             m.id,
             m.roomID,
@@ -595,43 +596,43 @@ func GetRoomMessagesWithStatusOfRead(roomID, currentUserID int, limit, offset in
         ORDER BY m.createdDateTime DESC
         LIMIT ? OFFSET ?
     `
-    
-    rows, err := db.Query(query, currentUserID, currentUserID, roomID, limit, offset)
-    if err != nil {
-        log.Printf("[DB] Query error: %v", err)
-        return nil, err
-    }
-    defer rows.Close()
-    
-    var messages []Message
-    for rows.Next() {
-        var msg Message
-        var nickname string
-        var isRead int
-        
-        err := rows.Scan(
-            &msg.ID, 
-            &msg.RoomID, 
-            &msg.UserID, 
-            &msg.Content,
-            &msg.CreatedDateTime, 
-            &nickname, 
-            &isRead,
-        )
-        if err != nil {
-            log.Printf("[DB] Scan error: %v", err)
-            return nil, err
-        }
-        
-        msg.UserNickname = nickname
-        msg.IsRead = isRead == 1
-        
-        messages = append(messages, msg)
-        log.Printf("[DB] Message: ID=%d, IsRead=%v", msg.ID, msg.IsRead)
-    }
-    
-    log.Printf("[DB] Returning %d messages", len(messages))
-    return messages, nil
+
+	rows, err := db.Query(query, currentUserID, currentUserID, roomID, limit, offset)
+	if err != nil {
+		log.Printf("[DB] Query error: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var messages []Message
+	for rows.Next() {
+		var msg Message
+		var nickname string
+		var isRead int
+
+		err := rows.Scan(
+			&msg.ID,
+			&msg.RoomID,
+			&msg.UserID,
+			&msg.Content,
+			&msg.CreatedDateTime,
+			&nickname,
+			&isRead,
+		)
+		if err != nil {
+			log.Printf("[DB] Scan error: %v", err)
+			return nil, err
+		}
+
+		msg.UserNickname = nickname
+		msg.IsRead = isRead == 1
+
+		messages = append(messages, msg)
+		log.Printf("[DB] Message: ID=%d, IsRead=%v", msg.ID, msg.IsRead)
+	}
+
+	log.Printf("[DB] Returning %d messages", len(messages))
+	return messages, nil
 }
 
 func GetUnreadCount(roomID, userID int) (int, error) {
