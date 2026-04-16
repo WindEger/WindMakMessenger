@@ -385,9 +385,9 @@ func getUserRoomsWithMeta(userID int) ([]RoomWithMeta, error) {
 		unread, _ := GetUnreadCount(r.ID, userID)
 		meta.UnreadCount = unread
 
-		msgs, err := GetRoomMessagesWithStatusOfRead(r.ID, userID, 1, 0)
-		if err == nil && len(msgs) > 0 {
-			m := msgs[0]
+		lastmsgs, err := GetRoomMessagesWithStatusOfRead(r.ID, userID, 1, 0)
+		if err == nil && len(lastmsgs) > 0 {
+			m := lastmsgs[0]
 			meta.LastMessage = &m
 		}
 
@@ -571,10 +571,10 @@ func GetRoomMessagesWithStatusOfRead(roomID, currentUserID int, limit, offset in
 	log.Printf("[DB] GetRoomMessagesWithStatusOfRead: roomID=%d, currentUserID=%d, limit=%d, offset=%d",
 		roomID, currentUserID, limit, offset)
 
-	err := MarkRoomMessagesAsRead(roomID, currentUserID)
-	if err != nil {
-		log.Printf("Warning: failed to mark messages as read: %v", err)
-	}
+	//err := MarkRoomMessagesAsRead(roomID, currentUserID)
+	//if err != nil {
+	//	log.Printf("Warning: failed to mark messages as read: %v", err)
+	//}
 
 	query := `
         SELECT 
