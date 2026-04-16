@@ -22,7 +22,7 @@ var jwtSecret = []byte(os.Getenv("JWT_SECRET")) //[]byte(JWT_SECRET)
 
 var (
 	MaxLoginAttempts = 5
-	LoginBanDuration = 15 * time.Minute
+	LoginBanDuration = 120 * time.Minute
 )
 
 func init() {
@@ -148,6 +148,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) error {
 
 	SendSuccess(w, http.StatusOK, "Login successful", map[string]interface{}{
 		"token":    tokenString,
+		"user_id":  user.ID,
 		"login":    user.Login,
 		"nickname": user.Nickname,
 	})
