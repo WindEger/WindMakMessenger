@@ -1,20 +1,40 @@
+//let currentLang = localStorage.getItem('lang') || 'en';
+//
+//const translations = {
+//    en: {
+//        passwordsDoNotMatch: 'Passwords do not match'
+//    },
+//    ru: {
+//        passwordsDoNotMatch: 'Пароли не совпадают'
+//    }
+//};
+//function t(key) {
+//    return translations[currentLang][key];
+//}
+// Использование
+//if (password !== repeatPassword) {
+//    elements.registerError.textContent = t('passwordsDoNotMatch');
+//    return;
+//}
+// На будущее. Чтоб 2 языка
+
+
 // ===== State Management =====
 const state = {
-    token: localStorage.getItem('token') || null,
     user: JSON.parse(localStorage.getItem('user') || 'null'),
+    token: localStorage.getItem('token') || null,
     ws: null,
     currentRoomId: null,
     rooms: [],
     messages: {},
     members: {},
     reconnectAttempts: 0,
-    maxReconnectAttempts: 5
+    maxReconnectAttempts: 2
 };
 
-// ===== DOM Elements =====
 const elements = {
+    // Auth
     authScreen: document.getElementById('auth-screen'),
-    appScreen: document.getElementById('app-screen'),
     loginForm: document.getElementById('login-form'),
     registerForm: document.getElementById('register-form'),
     showRegister: document.getElementById('show-register'),
@@ -23,32 +43,52 @@ const elements = {
     registerSubmit: document.getElementById('register-submit'),
     loginError: document.getElementById('login-error'),
     registerError: document.getElementById('register-error'),
+    // APP aside
+    appScreen: document.getElementById('app-screen'),
     currentUserNickname: document.getElementById('current-user-nickname'),
     logoutBtn: document.getElementById('logout-btn'),
+    // Rooms
     roomsList: document.getElementById('rooms-list'),
     createRoomBtn: document.getElementById('create-room-btn'),
+    createRoomModal: document.getElementById('create-room-modal'),
+    renameRoomModal: document.getElementById('rename-room-modal'),
+
     noRoomSelected: document.getElementById('no-room-selected'),
+    
     chatContainer: document.getElementById('chat-container'),
     currentRoomName: document.getElementById('current-room-name'),
     roomMembersCount: document.getElementById('room-members-count'),
-    messagesContainer: document.getElementById('messages-container'),
-    messageInput: document.getElementById('message-input'),
-    sendMessageForm: document.getElementById('send-message-form'),
-    showMembersBtn: document.getElementById('show-members-btn'),
-    renameRoomBtn: document.getElementById('rename-room-btn'),
-    leaveRoomBtn: document.getElementById('leave-room-btn'),
-    createRoomModal: document.getElementById('create-room-modal'),
+
     renameRoomModal: document.getElementById('rename-room-modal'),
-    addMemberModal: document.getElementById('add-member-modal'),
+    renameRoomBtn: document.getElementById('rename-room-btn'),
+
+    showMembersBtn: document.getElementById('show-members-btn'),
     membersModal: document.getElementById('members-modal'),
     membersList: document.getElementById('members-list'),
-    addMemberBtn: document.getElementById('add-member-btn')
-};
 
-// ===== Initialization =====
+    addMemberModal: document.getElementById('add-member-modal'),
+    addMemberBtn: document.getElementById('add-member-btn'),
+    addMemberError: document.getElementById('add-member-error'),
+    
+    leaveRoomBtn: document.getElementById('leave-room-btn'),
+
+    confirmModal: document.getElementById('confirm-modal'),
+    confirmTitle: document.getElementById('confirm-title'),
+    confirmMessage: document.getElementById('confirm-message'),
+    confirmOkBtn: document.getElementById('confirm-ok-btn'),
+
+    messagesContainer: document.getElementById('messages-container'),
+    sendMessageForm: document.getElementById('send-message-form'),
+    messageInput: document.getElementById('message-input'),
+}
+
+const API_HOST = 'localhost:50505';
+const API_BASE = `http://${API_HOST}`; // или . тогда текущий
+const wsUrl = `ws://${API_HOST}/ws?token=${state.token}`; // или . тогда текущий
+
+
 function init() {
     setupEventListeners();
-    
     if (state.token && state.user) {
         showApp();
         connectWebSocket();
@@ -61,44 +101,48 @@ function setupEventListeners() {
     // Auth
     elements.showRegister.addEventListener('click', (e) => {
         e.preventDefault();
-        elements.loginForm.classList.remove('active');
-        elements.registerForm.classList.add('active');
-        elements.loginError.textContent = '';
-        elements.registerError.textContent = '';
+        showRegisterForm()
     });
 
     elements.showLogin.addEventListener('click', (e) => {
         e.preventDefault();
-        elements.registerForm.classList.remove('active');
-        elements.loginForm.classList.add('active');
-        elements.loginError.textContent = '';
-        elements.registerError.textContent = '';
+        showLoginForm()
     });
 
     elements.loginSubmit.addEventListener('submit', handleLogin);
     elements.registerSubmit.addEventListener('submit', handleRegister);
     elements.logoutBtn.addEventListener('click', handleLogout);
 
-    // Rooms
     elements.createRoomBtn.addEventListener('click', () => openModal(elements.createRoomModal));
     document.getElementById('create-room-form').addEventListener('submit', handleCreateRoom);
 
-    // Chat
-    elements.sendMessageForm.addEventListener('submit', handleSendMessage);
+    elements.renameRoomBtn.addEventListener('click', () => openModal(elements.renameRoomModal));
+    document.getElementById('rename-room-form').addEventListener('submit', handleRenameRoom);
+
     elements.showMembersBtn.addEventListener('click', () => {
         loadMembers(state.currentRoomId);
         openModal(elements.membersModal);
     });
-    elements.renameRoomBtn.addEventListener('click', () => openModal(elements.renameRoomModal));
-    elements.leaveRoomBtn.addEventListener('click', handleLeaveRoom);
 
-    // Members
     elements.addMemberBtn.addEventListener('click', () => {
         closeModal(elements.membersModal);
         openModal(elements.addMemberModal);
     });
+
     document.getElementById('add-member-form').addEventListener('submit', handleAddMember);
-    document.getElementById('rename-room-form').addEventListener('submit', handleRenameRoom);
+    
+    elements.leaveRoomBtn.addEventListener('click', handleLeaveRoom);
+
+    elements.sendMessageForm.addEventListener('submit', handleSendMessage);
+
+
+    elements.confirmOkBtn.addEventListener('click', () => {
+        if (confirmCallback) {
+            confirmCallback();  // ← Вызываем callback
+        }
+        closeModal(elements.confirmModal);
+        confirmCallback = null;
+    });
 
     // Modal close handlers
     document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn => {
@@ -115,43 +159,50 @@ function setupEventListeners() {
             }
         });
     });
+
+    // Close modal on ESC key
+    document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        const activeModal = document.querySelector('.modal.active');
+        if (activeModal) {
+            closeModal(activeModal);
+        }
+    }
+    });
 }
 
-// ===== Auth Functions =====
-async function handleLogin(e) {
-    e.preventDefault();
+function showLoginForm() {
+    elements.registerForm.classList.remove('active');
+    elements.loginForm.classList.add('active');
     elements.loginError.textContent = '';
+    elements.registerError.textContent = '';
+}
 
-    const username = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
+function showRegisterForm() {
+    elements.loginForm.classList.remove('active');
+    elements.registerForm.classList.add('active');
+    elements.loginError.textContent = '';
+    elements.registerError.textContent = '';
+}
 
-    try {
-        const response = await fetch('/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ login: username, password })
-        });
+function showApp() {
+    elements.authScreen.classList.remove('active');
+    elements.appScreen.classList.add('active');
+    elements.currentUserNickname.textContent = state.user.nickname;
+}
 
-        const data = await response.json();
+function showAuth() {
+    elements.appScreen.classList.remove('active');
+    elements.authScreen.classList.add('active');
+}
 
-        if (data.success) {
-            state.token = data.data.token;
-            state.user = {
-                login: data.data.login,
-                nickname: data.data.nickname
-            };
-            localStorage.setItem('token', state.token);
-            localStorage.setItem('user', JSON.stringify(state.user));
-            
-            showApp();
-            connectWebSocket();
-        } else {
-            elements.loginError.textContent = data.error || 'Login failed';
-        }
-    } catch (error) {
-        elements.loginError.textContent = 'Network error. Please try again.';
-        console.error('Login error:', error);
-    }
+function showSuccessMessage(element, message) {
+    element.textContent = message;
+    element.classList.add('success-message');
+    setTimeout(() => {
+        element.textContent = '';
+        element.classList.remove('success-message');
+    }, 3000);
 }
 
 async function handleRegister(e) {
@@ -169,7 +220,7 @@ async function handleRegister(e) {
     }
 
     try {
-        const response = await fetch('/register', {
+        const response = await fetch(`${API_BASE}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -186,15 +237,10 @@ async function handleRegister(e) {
             // Auto-login after registration
             document.getElementById('login-username').value = username;
             document.getElementById('login-password').value = password;
-            elements.registerForm.classList.remove('active');
-            elements.loginForm.classList.add('active');
+            showLoginForm()
             
             // Show success message
-            const successMsg = document.createElement('div');
-            successMsg.style.cssText = 'color: #2ecc71; font-size: 0.875rem; margin-top: 0.75rem;';
-            successMsg.textContent = 'Registration successful! Please sign in.';
-            elements.loginForm.querySelector('form').appendChild(successMsg);
-            setTimeout(() => successMsg.remove(), 3000);
+            showSuccessMessage(elements.loginError, 'Registration successful! Please sign in.');
         } else {
             elements.registerError.textContent = data.error || 'Registration failed';
         }
@@ -204,8 +250,45 @@ async function handleRegister(e) {
     }
 }
 
+// ===== Auth Functions =====
+async function handleLogin(e) {
+    e.preventDefault();
+    elements.loginError.textContent = '';
+
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+
+    try {
+        const response = await fetch(`${API_BASE}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ login: username, password })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            state.token = data.data.token;
+            state.user = {
+                nickname: data.data.nickname
+            };
+            localStorage.setItem('token', state.token);
+            localStorage.setItem('user', JSON.stringify(state.user));
+            
+            showApp();
+            connectWebSocket();
+        } else {
+            elements.loginError.textContent = data.error || 'Login failed';
+        }
+    } catch (error) {
+        elements.loginError.textContent = 'Network error. Please try again.';
+        console.error('Login error:', error);
+    }
+}
+
+
 function handleLogout() {
-    if (state.ws) {
+    if (state.ws && state.ws.readyState !== WebSocket.CLOSED) {
         state.ws.close();
     }
     
@@ -221,6 +304,7 @@ function handleLogout() {
     showAuth();
 }
 
+
 // ===== WebSocket Functions =====
 function connectWebSocket() {
     if (state.ws) {
@@ -228,7 +312,7 @@ function connectWebSocket() {
     }
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws?token=${state.token}`;
+    const wsUrl = `ws://${API_HOST}/ws?token=${state.token}`;
 
     state.ws = new WebSocket(wsUrl);
 
@@ -260,87 +344,57 @@ function connectWebSocket() {
                 console.log(`Reconnecting... Attempt ${state.reconnectAttempts}`);
                 connectWebSocket();
             }, 2000 * state.reconnectAttempts);
+        } else if (state.reconnectAttempts >= state.maxReconnectAttempts) {
+            console.log('Max reconnection attempts reached. Logging out...');
+            handleLogout();
+            elements.loginError.textContent = 'Connection lost. Please login again.';
+            showNotification('Connection lost. Please login again.', 'error');
         }
     };
 }
 
-function sendWebSocketMessage(action, payload = {}) {
-    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-        state.ws.send(JSON.stringify({ action, payload }));
-    } else {
-        console.error('WebSocket is not connected');
-    }
+
+function showNotification(message, type = 'info') {
+    console.log(`[${type.toUpperCase()}]`, message);
 }
 
 function handleWebSocketMessage(message) {
-    console.log('WS message:', message);
+    //console.log('WS message:', message);
+    console.log('WS message type:', message.type, 'from:', message.from);
 
     switch (message.action) {
         case 'rooms':
-            state.rooms = message.data || [];
-            renderRooms();
+            handleRoomsUpdate(message.data);
             break;
 
         case 'messages':
-            const { room_id, messages } = message.data;
-            state.messages[room_id] = messages || [];
-            if (state.currentRoomId === room_id) {
-                renderMessages();
-            }
-            break;
-
-        case 'new_message':
-            const msg = message.data;
-            if (!state.messages[msg.room_id]) {
-                state.messages[msg.room_id] = [];
-            }
-            state.messages[msg.room_id].unshift(msg);
-            
-            if (state.currentRoomId === msg.room_id) {
-                renderMessages();
-                markRoomAsRead(msg.room_id);
-            }
-            
-            // Update room list
-            sendWebSocketMessage('get_rooms');
+            handleMessagesUpdate(message.data);
             break;
 
         case 'room_created':
-            state.rooms = message.data.rooms || [];
-            renderRooms();
-            if (message.data.new_room_id) {
-                selectRoom(message.data.new_room_id);
-            }
+            handleRoomCreated(message.data);
+            break;
+
+        case 'new_message':
+            handleNewMessage(message.data);
             break;
 
         case 'left_room':
-            if (state.currentRoomId === message.data.room_id) {
-                state.currentRoomId = null;
-                showNoRoomSelected();
-            }
-            sendWebSocketMessage('get_rooms');
+            handleLeftRoom(message.data);
             break;
 
         case 'room_renamed':
-            const renamedRoom = state.rooms.find(r => r.ID === message.data.room_id);
-            if (renamedRoom) {
-                renamedRoom.RoomName = message.data.room_name;
-                renderRooms();
-                if (state.currentRoomId === message.data.room_id) {
-                    elements.currentRoomName.textContent = message.data.room_name;
-                }
-            }
+            handleRoomRenamed(message.data);
             break;
 
         case 'members':
-            state.members[message.data.room_id] = message.data.members || [];
-            if (elements.membersModal.classList.contains('active')) {
-                renderMembers(message.data.room_id);
-            }
-            updateMembersCount(message.data.room_id);
+            handleMembersUpdate(message.data);
             break;
 
         case 'member_added':
+            handleMemberAddedSuccessfully();
+            break;
+
         case 'member_joined':
             sendWebSocketMessage('get_members', { room_id: state.currentRoomId });
             break;
@@ -354,12 +408,23 @@ function handleWebSocketMessage(message) {
             break;
 
         case 'messages_read':
-            // Update UI to show messages as read
+            sendWebSocketMessage('get_rooms');
+            break;
+
+        case 'mark_read_ok':
             sendWebSocketMessage('get_rooms');
             break;
 
         case 'pong':
-            // Response to ping
+            break;
+
+        case 'add_member_error':
+            if (elements.addMemberModal?.classList.contains('active')) {
+                const errorText = message.error.charAt(0).toUpperCase() + message.error.slice(1).toLowerCase();
+                elements.addMemberError.textContent = errorText;
+            } else {
+                showNotification(message.error, 'error');
+            }
             break;
 
         default:
@@ -368,6 +433,90 @@ function handleWebSocketMessage(message) {
                 showNotification(message.error, 'error');
             }
     }
+}
+
+
+
+// ===== Room Functions =====
+function handleRoomsUpdate(data) {
+    state.rooms = data || [];
+    renderRooms();
+}
+
+// ===== Messages Functions =====
+function handleMessagesUpdate(data) {
+    const { room_id, messages } = data;
+    state.messages[room_id] = messages || [];
+    
+    if (state.currentRoomId === room_id) {
+        renderMessages();
+    }
+}
+
+function handleRoomCreated(data) {
+    state.rooms = data.rooms || [];
+    renderRooms();
+    
+    if (data.new_room_id) {
+        selectRoom(data.new_room_id);
+    }
+}
+
+function handleNewMessage(data) {
+    const msg = data;
+    
+    if (!state.messages[msg.room_id]) {
+        state.messages[msg.room_id] = [];
+    }
+    
+    state.messages[msg.room_id].unshift(msg);
+    if (state.currentRoomId === msg.room_id) {
+        renderMessages();
+        markRoomAsRead(msg.room_id);
+    }
+    
+    sendWebSocketMessage('get_rooms');
+}
+
+function handleLeftRoom(data) {
+    if (state.currentRoomId === data.room_id) {
+        state.currentRoomId = null;
+        showNoRoomSelected();
+    }
+    sendWebSocketMessage('get_rooms');
+}
+
+function handleRoomRenamed(data) {
+    const renamedRoom = state.rooms.find(r => r.ID === data.room_id);
+    if (renamedRoom) {
+        renamedRoom.RoomName = data.room_name;
+        renderRooms();
+        if (state.currentRoomId === data.room_id) {
+            elements.currentRoomName.textContent = data.room_name;
+        }
+    }
+}
+
+function handleMembersUpdate(data) {
+    state.members[data.room_id] = data.members || [];
+    if (elements.membersModal && elements.membersModal.classList.contains('active')) {
+        renderMembers(data.room_id);
+    }
+    updateMembersCount(data.room_id);
+}
+
+
+async function handleRenameRoom(e) {
+    e.preventDefault();
+    const roomName = document.getElementById('rename-room-name').value;
+
+    sendWebSocketMessage('rename_room', {
+        room_id: state.currentRoomId,
+        room_name: roomName
+    });
+
+    closeModal(elements.renameRoomModal);
+    document.getElementById('rename-room-name').value = '';
 }
 
 // ===== Room Functions =====
@@ -386,7 +535,13 @@ function renderRooms() {
         return;
     }
 
-    state.rooms.forEach(room => {
+    const sortedRooms = [...state.rooms].sort((a, b) => {
+        const timeA = a.LastMessage?.created_at || 0;
+        const timeB = b.LastMessage?.created_at || 0;
+        return timeB - timeA;
+    });
+
+    sortedRooms.forEach(room => {
         const roomEl = document.createElement('div');
         roomEl.className = 'room-item';
         if (state.currentRoomId === room.ID) {
@@ -407,13 +562,34 @@ function renderRooms() {
                 <div class="room-name">${escapeHtml(room.RoomName)}</div>
                 <div class="room-time">${lastMessageTime}</div>
             </div>
-            <div class="room-last-message">${escapeHtml(lastMessageText)}</div>
-            ${room.UnreadCount > 0 ? `<div class="unread-badge">${room.UnreadCount}</div>` : ''}
+            <div class="room-footer">
+                <div class="room-last-message">${escapeHtml(lastMessageText)}</div>
+                ${room.UnreadCount > 0 ? `<div class="unread-badge">${room.UnreadCount}</div>` : ''}
+            </div>
         `;
 
         roomEl.addEventListener('click', () => selectRoom(room.ID));
+
         elements.roomsList.appendChild(roomEl);
     });
+}
+
+
+function showNoRoomSelected() {
+    elements.noRoomSelected.style.display = 'flex';
+    elements.chatContainer.style.display = 'none';
+}
+
+function showChatContainer() {
+    elements.noRoomSelected.style.display = 'none';
+    elements.chatContainer.style.display = 'flex';
+}
+
+function showConfirm(message, title = 'Confirm', onOk) {
+    elements.confirmTitle.textContent = title;
+    elements.confirmMessage.textContent = message;
+    confirmCallback = onOk;
+    openModal(elements.confirmModal);
 }
 
 function selectRoom(roomId) {
@@ -422,30 +598,42 @@ function selectRoom(roomId) {
     
     if (!room) return;
 
-    // Update UI
     elements.currentRoomName.textContent = room.RoomName;
     showChatContainer();
     
-    // Load messages
+    markRoomAsRead(roomId);
+
+    sendWebSocketMessage('get_members', { room_id: roomId });
+
     sendWebSocketMessage('get_messages', {
         room_id: roomId,
         limit: 50,
         offset: 0
     });
 
-    // Load members
-    sendWebSocketMessage('get_members', { room_id: roomId });
 
-    // Mark as read
-    markRoomAsRead(roomId);
-
-    // Update room list selection
     renderRooms();
 }
 
 function markRoomAsRead(roomId) {
     sendWebSocketMessage('mark_read', { room_id: roomId });
 }
+
+
+function sendWebSocketMessage(action, payload = {}) {
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+        state.ws.send(JSON.stringify({ action, payload }));
+    } else {
+        console.error('WebSocket is not connected');
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 
 async function handleCreateRoom(e) {
     e.preventDefault();
@@ -457,35 +645,98 @@ async function handleCreateRoom(e) {
     document.getElementById('new-room-name').value = '';
 }
 
-async function handleRenameRoom(e) {
-    e.preventDefault();
-    const roomName = document.getElementById('rename-room-name').value;
-
-    sendWebSocketMessage('rename_room', {
-        room_id: state.currentRoomId,
-        room_name: roomName
-    });
-
-    closeModal(elements.renameRoomModal);
-    document.getElementById('rename-room-name').value = '';
+function closeModal(modal) {
+    modal.classList.remove('active');
 }
 
-async function handleLeaveRoom() {
-    if (!confirm('Are you sure you want to leave this room?')) {
+function openModal(modal) {
+    modal.classList.add('active');
+}
+
+function updateMembersCount(roomId) {
+    const members = state.members[roomId] || [];
+    if (state.currentRoomId === roomId) {
+        elements.roomMembersCount.textContent = `${members.length} member${members.length !== 1 ? 's' : ''}`;
+    }
+}
+
+function loadMembers(roomId) {
+    sendWebSocketMessage('get_members', { room_id: roomId });
+}
+
+function renderMembers(roomId) {
+    const members = state.members[roomId] || [];
+    elements.membersList.innerHTML = '';
+
+    if (members.length === 0) {
+        elements.membersList.innerHTML = '<div class="empty-state">No members found</div>';
         return;
     }
 
-    sendWebSocketMessage('leave_room', { room_id: state.currentRoomId });
+    members.forEach(member => {
+        const memberEl = document.createElement('div');
+        memberEl.className = 'member-item';
+
+        const initial = member.Nickname ? member.Nickname.charAt(0).toUpperCase() : '?';
+
+        memberEl.innerHTML = `
+            <div class="member-avatar">${initial}</div>
+            <div class="member-info">
+                <div class="member-nickname">${escapeHtml(member.Nickname)}</div>
+                <div class="member-login">@${escapeHtml(member.Login)}</div>
+            </div>
+        `;
+
+        elements.membersList.appendChild(memberEl);
+    });
 }
 
-// ===== Message Functions =====
+async function handleAddMember(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('member-username').value;
+    
+    elements.addMemberError.textContent = '';
+    
+    if (!username.trim()) {
+        elements.addMemberError.textContent = 'Username is required';
+        return;
+    }
+    
+    sendWebSocketMessage('add_member', {
+        room_id: state.currentRoomId,
+        login: username
+    });
+    
+    //closeModal(elements.addMemberModal);
+    //document.getElementById('member-username').value = '';
+}
+
+function handleMemberAddedSuccessfully() {
+    showSuccessMessage(elements.addMemberError, 'Member added successful!');
+    setTimeout(() => {
+        if (elements.addMemberModal && elements.addMemberModal.classList.contains('active')) {
+            closeModal(elements.addMemberModal);
+        }
+        document.getElementById('member-username').value = '';
+        elements.addMemberError.textContent = '';
+    }, 1500);
+    showNotification('Member added', 'success');
+}
+
+async function handleLeaveRoom() {
+    showConfirm('Are you sure you want to leave this room?', 'Leave Room', () => {
+        sendWebSocketMessage('leave_room', { room_id: state.currentRoomId });
+    });
+}
+
 function renderMessages() {
     const messages = state.messages[state.currentRoomId] || [];
     elements.messagesContainer.innerHTML = '';
 
     if (messages.length === 0) {
         elements.messagesContainer.innerHTML = `
-            <div class="empty-state">
+            <div class="empty-state message">
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                 </svg>
@@ -538,92 +789,6 @@ function handleSendMessage(e) {
     elements.messageInput.value = '';
 }
 
-// ===== Member Functions =====
-function loadMembers(roomId) {
-    sendWebSocketMessage('get_members', { room_id: roomId });
-}
-
-function renderMembers(roomId) {
-    const members = state.members[roomId] || [];
-    elements.membersList.innerHTML = '';
-
-    if (members.length === 0) {
-        elements.membersList.innerHTML = '<div class="empty-state">No members found</div>';
-        return;
-    }
-
-    members.forEach(member => {
-        const memberEl = document.createElement('div');
-        memberEl.className = 'member-item';
-
-        const initial = member.Nickname ? member.Nickname.charAt(0).toUpperCase() : '?';
-
-        memberEl.innerHTML = `
-            <div class="member-avatar">${initial}</div>
-            <div class="member-info">
-                <div class="member-nickname">${escapeHtml(member.Nickname)}</div>
-                <div class="member-login">@${escapeHtml(member.Login)}</div>
-            </div>
-        `;
-
-        elements.membersList.appendChild(memberEl);
-    });
-}
-
-function updateMembersCount(roomId) {
-    const members = state.members[roomId] || [];
-    if (state.currentRoomId === roomId) {
-        elements.roomMembersCount.textContent = `${members.length} member${members.length !== 1 ? 's' : ''}`;
-    }
-}
-
-async function handleAddMember(e) {
-    e.preventDefault();
-    const username = document.getElementById('member-username').value;
-
-    sendWebSocketMessage('add_member', {
-        room_id: state.currentRoomId,
-        login: username
-    });
-
-    closeModal(elements.addMemberModal);
-    document.getElementById('member-username').value = '';
-}
-
-// ===== UI Functions =====
-function showAuth() {
-    elements.authScreen.classList.add('active');
-    elements.appScreen.classList.remove('active');
-}
-
-function showApp() {
-    elements.authScreen.classList.remove('active');
-    elements.appScreen.classList.add('active');
-    elements.currentUserNickname.textContent = state.user.nickname;
-}
-
-function showChatContainer() {
-    elements.noRoomSelected.style.display = 'none';
-    elements.chatContainer.style.display = 'flex';
-}
-
-function showNoRoomSelected() {
-    elements.noRoomSelected.style.display = 'flex';
-    elements.chatContainer.style.display = 'none';
-}
-
-function openModal(modal) {
-    modal.classList.add('active');
-}
-
-function closeModal(modal) {
-    modal.classList.remove('active');
-}
-
-function showNotification(message, type = 'info') {
-    // Simple console notification for now
-    console.log(`[${type.toUpperCase()}]`, message);
-}
 
 // ===== Utility Functions =====
 function formatTime(timestamp) {
@@ -660,11 +825,4 @@ function formatTime(timestamp) {
     return date.toLocaleDateString();
 }
 
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// ===== Start Application =====
 document.addEventListener('DOMContentLoaded', init);

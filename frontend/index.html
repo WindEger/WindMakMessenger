@@ -1,45 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messenger</title>
+    <title>Document</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Auth Screen -->
     <div id="auth-screen" class="screen active">
         <div class="auth-container">
             <div class="auth-box">
-                <h1 class="auth-title">Messenger</h1>
-                
-                <!-- Login Form -->
+                <h1 class="auth-title">WindMessenger</h1>
                 <div id="login-form" class="auth-form active">
                     <h2>Sign In</h2>
                     <form id="login-submit">
                         <div class="input-group">
-                            <label for="login-username">Username</label>
+                            <label for="login-username">Login</label>
                             <input type="text" id="login-username" required autocomplete="username">
                         </div>
                         <div class="input-group">
                             <label for="login-password">Password</label>
                             <input type="password" id="login-password" required autocomplete="current-password">
                         </div>
-                        <button type="submit" class="btn btn-primary">Sign In</button>
                         <div id="login-error" class="error-message"></div>
+                        <button type="submit" class="btn btn-primary">Sign In</button>
                     </form>
                     <p class="auth-switch">
-                        Don't have an account? 
-                        <a href="#" id="show-register">Sign Up</a>
+                        Don't have an account?
+                        <button id="show-register" class="btn-primary ">Sign Up</button>
                     </p>
                 </div>
-
-                <!-- Register Form -->
                 <div id="register-form" class="auth-form">
                     <h2>Sign Up</h2>
                     <form id="register-submit">
                         <div class="input-group">
-                            <label for="register-username">Username</label>
+                            <label for="register-username">Login</label>
                             <input type="text" id="register-username" required autocomplete="username">
                         </div>
                         <div class="input-group">
@@ -54,118 +49,160 @@
                             <label for="register-repeat-password">Repeat Password</label>
                             <input type="password" id="register-repeat-password" required autocomplete="new-password">
                         </div>
-                        <button type="submit" class="btn btn-primary">Sign Up</button>
                         <div id="register-error" class="error-message"></div>
+                        <button type="submit" class="btn btn-primary">Sign Up</button>
                     </form>
                     <p class="auth-switch">
                         Already have an account? 
-                        <a href="#" id="show-login">Sign In</a>
-                    </p>
+                        <button id="show-login" class="btn-primary ">Sign In</button>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Main App Screen -->
     <div id="app-screen" class="screen">
         <div class="app-container">
-            <!-- Sidebar -->
-            <aside class="sidebar">
-                <div class="sidebar-header">
-                    <h1 class="app-title">Messenger</h1>
-                    <div class="user-info">
-                        <span id="current-user-nickname"></span>
-                        <button id="logout-btn" class="btn-icon" title="Logout">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
-                            </svg>
-                        </button>
+            <div class="app-box">
+                <aside class="sidebar">
+                    <div class="sidebar-header">
+                        <h1 class="app-title">WindMessenger</h1>
+                        <div class="user-info">
+                            <div class="user-details">
+                                <div class="avatar"></div>
+                                <span id="current-user-nickname"></span>
+                            </div>
+                            <button id="logout-btn" class="btn-icon" title="Logout">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-                </div>
-
-                <div class="rooms-controls">
-                    <button id="create-room-btn" class="btn btn-secondary">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <div id="rooms-list" class="rooms-list">
+                        <!-- Пример комнаты 1
+                        <div class="room-item active">
+                            <div class="room-header">
+                                <div class="room-name">Общий чат</div>
+                                <div class="room-time">14:30</div>
+                            </div>
+                            <div class="room-footer">
+                                <div class="room-last-message">Анна: Привет всем!</div>
+                                <div class="unread-badge">3</div>
+                            </div>
+                        </div>-->
+                    </div>
+                    <button id="create-room-btn" class="btn-create-room-fab">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg>
-                        New Room
                     </button>
-                </div>
+                </aside>
+                
+                <!-- Main Chat Area -->
+                <main class="main-chat">
+                    <div id="no-room-selected" class="empty-state">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <p>Select a room to start messaging</p>
+                    </div>
 
-                <div id="rooms-list" class="rooms-list">
-                    <!-- Rooms will be loaded here -->
-                </div>
-            </aside>
-
-            <!-- Main Chat Area -->
-            <main class="main-chat">
-                <div id="no-room-selected" class="no-selection">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-                    </svg>
-                    <p>Select a room to start messaging</p>
-                </div>
-
-                <div id="chat-container" class="chat-container" style="display: none;">
-                    <!-- Chat Header -->
-                    <div class="chat-header">
-                        <div class="chat-header-info">
-                            <h2 id="current-room-name">Room Name</h2>
-                            <span id="room-members-count" class="members-count">0 members</span>
-                        </div>
-                        <div class="chat-header-actions">
-                            <button id="show-members-btn" class="btn-icon" title="Members">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="9" cy="7" r="4"/>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                                </svg>
-                            </button>
-                            <button id="rename-room-btn" class="btn-icon" title="Rename Room">
+                    <div id="chat-container" class="chat-container" style="display: none;">
+                        <div class="chat-header">
+                            <div class="chat-header-info">
+                                <h2 id="current-room-name">Room Name</h2>
+                                <button id="rename-room-btn" class="btn-icon dark" title="Rename Room">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                 </svg>
-                            </button>
-                            <button id="leave-room-btn" class="btn-icon btn-danger" title="Leave Room">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                    <polyline points="16 17 21 12 16 7"/>
-                                    <line x1="21" y1="12" x2="9" y2="12"/>
-                                </svg>
-                            </button>
+                                </button>
+                            </div>
+                            <div class="chat-header-actions">
+                                <button id="show-members-btn" class="btn btn-icon dark" title="Members">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                    </svg>
+                                    <span id="room-members-count" class="members-count">0 members</span>
+                                </button>
+
+                                <button id="leave-room-btn" class="btn-icon dark danger" title="Leave Room">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                        <polyline points="16 17 21 12 16 7"/>
+                                        <line x1="21" y1="12" x2="9" y2="12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Messages Area -->
+                        <div id="messages-container" class="messages-container">
+                            <!-- 
+                            <div class="message">
+                                <div class="message-avatar">A</div>
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <span class="message-author">Анна</span>
+                                        <span class="message-time">14:30</span>
+                                    </div>
+                                    <div class="message-text">Привет всем!</div>
+                                </div>
+                            </div>-->
+                        
+                            <!-- Пример сообщения (свое)
+                            <div class="message own">
+                                <div class="message-avatar">Я</div>
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <span class="message-author">Вы</span>
+                                        <span class="message-time">14:32</span>
+                                    </div>
+                                    <div class="message-text">Здравствуйте!</div>
+                                </div>
+                            </div>-->
+                        
+                        <!-- Messages will be loaded here -->
+                        </div>
+
+                        <!-- Message Input -->
+                        <div class="message-input-container">
+                            <form id="send-message-form">
+                                <input 
+                                    type="text" 
+                                    id="message-input" 
+                                    placeholder="Type a message..." 
+                                    autocomplete="off"
+                                    maxlength="5000"
+                                >
+                                <button type="submit" class="btn-primary btn-send">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                </button>
+                            </form>
                         </div>
                     </div>
-
-                    <!-- Messages Area -->
-                    <div id="messages-container" class="messages-container">
-                        <!-- Messages will be loaded here -->
-                    </div>
-
-                    <!-- Message Input -->
-                    <div class="message-input-container">
-                        <form id="send-message-form">
-                            <input 
-                                type="text" 
-                                id="message-input" 
-                                placeholder="Type a message..." 
-                                autocomplete="off"
-                                maxlength="5000"
-                            >
-                            <button type="submit" class="btn-send">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                </svg>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </main>
+                </main>
+            </div>
         </div>
     </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     <!-- Modals -->
     
@@ -182,7 +219,7 @@
                     <input type="text" id="new-room-name" required>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                    <button type="button" class="btn modal-cancel">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create</button>
                 </div>
             </form>
@@ -202,28 +239,8 @@
                     <input type="text" id="rename-room-name" required>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
+                    <button type="button" class="btn modal-cancel">Cancel</button>
                     <button type="submit" class="btn btn-primary">Rename</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Add Member Modal -->
-    <div id="add-member-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add Member</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <form id="add-member-form">
-                <div class="input-group">
-                    <label for="member-username">Username</label>
-                    <input type="text" id="member-username" required>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary modal-cancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Add</button>
                 </div>
             </form>
         </div>
@@ -238,13 +255,61 @@
             </div>
             <div id="members-list" class="members-list">
                 <!-- Members will be loaded here -->
+                <!--<div class="member-item">
+                    <div class="member-avatar">A</div>
+                    <div class="member-info">
+                        <div class="member-nickname">Aleafdsx</div>
+                        <div class="member-login">@asfaggasGt</div>
+                    </div>
+                </div>
+                <div class="member-item">-->
             </div>
             <div class="modal-actions">
+                <button class="btn modal-cancel">Close</button>
                 <button id="add-member-btn" class="btn btn-primary">Add Member</button>
-                <button class="btn btn-secondary modal-cancel">Close</button>
             </div>
         </div>
     </div>
+
+    <!-- Add Member Modal -->
+    <div id="add-member-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Member</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="add-member-form">
+                <div class="input-group">
+                    <label for="member-username">Userlogin</label>
+                    <input type="text" id="member-username" required>
+                </div>
+                <div id="add-member-error" class="error-message"></div>
+                <div class="modal-actions">
+                    <button type="button" class="btn modal-cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="confirm-title">Confirm</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">Are you sure?</p>
+            </div>
+            <div class="modal-actions">
+                
+                <button id="confirm-ok-btn" class="btn btn-primary danger">OK</button>
+                <button type="button" class="btn modal-cancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
 
     <script src="app.js"></script>
 </body>
