@@ -83,10 +83,12 @@ const elements = {
 }
 
 const API_HOST = 'localhost:50505';
-const API_BASE = `http://${API_HOST}`; // или . тогда текущий
-const wsUrl = `ws://${API_HOST}/ws?token=${state.token}`; // или . тогда текущий
+const API_BASE = `http://${API_HOST}`;
+const wsUrl = `ws://${API_HOST}/ws?token=${state.token}`;
 
+let confirmCallback = null;
 
+// ===== INITIALIZATION =====
 function init() {
     setupEventListeners();
     if (state.token && state.user) {
@@ -97,8 +99,8 @@ function init() {
     }
 }
 
+// ===== EVENT LISTENERS =====
 function setupEventListeners() {
-    // Auth
     elements.showRegister.addEventListener('click', (e) => {
         e.preventDefault();
         showRegisterForm()
@@ -135,23 +137,20 @@ function setupEventListeners() {
 
     elements.sendMessageForm.addEventListener('submit', handleSendMessage);
 
-
     elements.confirmOkBtn.addEventListener('click', () => {
         if (confirmCallback) {
-            confirmCallback();  // ← Вызываем callback
+            confirmCallback();
         }
         closeModal(elements.confirmModal);
         confirmCallback = null;
     });
 
-    // Modal close handlers
     document.querySelectorAll('.modal-close, .modal-cancel').forEach(btn => {
         btn.addEventListener('click', function() {
             closeModal(this.closest('.modal'));
         });
     });
 
-    // Close modal on outside click
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -160,17 +159,17 @@ function setupEventListeners() {
         });
     });
 
-    // Close modal on ESC key
     document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        const activeModal = document.querySelector('.modal.active');
-        if (activeModal) {
-            closeModal(activeModal);
+        if (e.key === 'Escape') {
+            const activeModal = document.querySelector('.modal.active');
+            if (activeModal) {
+                closeModal(activeModal);
+            }
         }
-    }
     });
 }
 
+// ===== UI NAVIGATION =====
 function showLoginForm() {
     elements.registerForm.classList.remove('active');
     elements.loginForm.classList.add('active');
@@ -196,6 +195,20 @@ function showAuth() {
     elements.authScreen.classList.add('active');
 }
 
+function showNoRoomSelected() {
+    elements.noRoomSelected.style.display = 'flex';
+    elements.chatContainer.style.display = 'none';
+}
+
+function showChatContainer() {
+    elements.noRoomSelected.style.display = 'none';
+    elements.chatContainer.style.display = 'flex';
+}
+
+function showNotification(message, type = 'info') {
+    // console.log(`[${type.toUpperCase()}]`, message);
+}
+
 function showSuccessMessage(element, message) {
     element.textContent = message;
     element.classList.add('success-message');
@@ -205,6 +218,23 @@ function showSuccessMessage(element, message) {
     }, 3000);
 }
 
+function showConfirm(message, title = 'Confirm', onOk) {
+    elements.confirmTitle.textContent = title;
+    elements.confirmMessage.textContent = message;
+    confirmCallback = onOk;
+    openModal(elements.confirmModal);
+}
+
+// ===== MODAL FUNCTIONS =====
+function closeModal(modal) {
+    modal.classList.remove('active');
+}
+
+function openModal(modal) {
+    modal.classList.add('active');
+}
+
+// ===== AUTH FUNCTIONS =====
 async function handleRegister(e) {
     e.preventDefault();
     elements.registerError.textContent = '';
@@ -234,23 +264,19 @@ async function handleRegister(e) {
         const data = await response.json();
 
         if (data.success) {
-            // Auto-login after registration
             document.getElementById('login-username').value = username;
             document.getElementById('login-password').value = password;
             showLoginForm()
-            
-            // Show success message
             showSuccessMessage(elements.loginError, 'Registration successful! Please sign in.');
         } else {
             elements.registerError.textContent = data.error || 'Registration failed';
         }
     } catch (error) {
         elements.registerError.textContent = 'Network error. Please try again.';
-        console.error('Register error:', error);
+        // console.error('Register error:', error);
     }
 }
 
-// ===== Auth Functions =====
 async function handleLogin(e) {
     e.preventDefault();
     elements.loginError.textContent = '';
@@ -270,6 +296,7 @@ async function handleLogin(e) {
         if (data.success) {
             state.token = data.data.token;
             state.user = {
+                id: data.data.user_id,
                 nickname: data.data.nickname
             };
             localStorage.setItem('token', state.token);
@@ -282,10 +309,9 @@ async function handleLogin(e) {
         }
     } catch (error) {
         elements.loginError.textContent = 'Network error. Please try again.';
-        console.error('Login error:', error);
+        // console.error('Login error:', error);
     }
 }
-
 
 function handleLogout() {
     if (state.ws && state.ws.readyState !== WebSocket.CLOSED) {
@@ -304,20 +330,18 @@ function handleLogout() {
     showAuth();
 }
 
-
-// ===== WebSocket Functions =====
+// ===== WEBSOCKET FUNCTIONS =====
 function connectWebSocket() {
     if (state.ws) {
         state.ws.close();
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `ws://${API_HOST}/ws?token=${state.token}`;
 
     state.ws = new WebSocket(wsUrl);
 
     state.ws.onopen = () => {
-        console.log('WebSocket connected');
+        // console.log('WebSocket connected');
         state.reconnectAttempts = 0;
     };
 
@@ -326,26 +350,25 @@ function connectWebSocket() {
             const message = JSON.parse(event.data);
             handleWebSocketMessage(message);
         } catch (error) {
-            console.error('Error parsing WebSocket message:', error);
+            // console.error('Error parsing WebSocket message:', error);
         }
     };
 
     state.ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        // console.error('WebSocket error:', error);
     };
 
     state.ws.onclose = () => {
-        console.log('WebSocket disconnected');
+        // console.log('WebSocket disconnected');
         
-        // Attempt to reconnect
         if (state.token && state.reconnectAttempts < state.maxReconnectAttempts) {
             state.reconnectAttempts++;
             setTimeout(() => {
-                console.log(`Reconnecting... Attempt ${state.reconnectAttempts}`);
+                // console.log(`Reconnecting... Attempt ${state.reconnectAttempts}`);
                 connectWebSocket();
             }, 2000 * state.reconnectAttempts);
         } else if (state.reconnectAttempts >= state.maxReconnectAttempts) {
-            console.log('Max reconnection attempts reached. Logging out...');
+            // console.log('Max reconnection attempts reached. Logging out...');
             handleLogout();
             elements.loginError.textContent = 'Connection lost. Please login again.';
             showNotification('Connection lost. Please login again.', 'error');
@@ -353,14 +376,16 @@ function connectWebSocket() {
     };
 }
 
-
-function showNotification(message, type = 'info') {
-    console.log(`[${type.toUpperCase()}]`, message);
+function sendWebSocketMessage(action, payload = {}) {
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+        state.ws.send(JSON.stringify({ action, payload }));
+    } else {
+        // console.error('WebSocket is not connected');
+    }
 }
 
 function handleWebSocketMessage(message) {
-    //console.log('WS message:', message);
-    console.log('WS message type:', message.type, 'from:', message.from);
+    // console.log('WS message type:', message.type, 'from:', message.from);
 
     switch (message.action) {
         case 'rooms':
@@ -429,28 +454,16 @@ function handleWebSocketMessage(message) {
 
         default:
             if (!message.success && message.error) {
-                console.error('WebSocket error:', message.error);
+                // console.error('WebSocket error:', message.error);
                 showNotification(message.error, 'error');
             }
     }
 }
 
-
-
-// ===== Room Functions =====
+// ===== ROOM HANDLERS =====
 function handleRoomsUpdate(data) {
     state.rooms = data || [];
     renderRooms();
-}
-
-// ===== Messages Functions =====
-function handleMessagesUpdate(data) {
-    const { room_id, messages } = data;
-    state.messages[room_id] = messages || [];
-    
-    if (state.currentRoomId === room_id) {
-        renderMessages();
-    }
 }
 
 function handleRoomCreated(data) {
@@ -460,30 +473,6 @@ function handleRoomCreated(data) {
     if (data.new_room_id) {
         selectRoom(data.new_room_id);
     }
-}
-
-function handleNewMessage(data) {
-    const msg = data;
-    
-    if (!state.messages[msg.room_id]) {
-        state.messages[msg.room_id] = [];
-    }
-    
-    state.messages[msg.room_id].unshift(msg);
-    if (state.currentRoomId === msg.room_id) {
-        renderMessages();
-        markRoomAsRead(msg.room_id);
-    }
-    
-    sendWebSocketMessage('get_rooms');
-}
-
-function handleLeftRoom(data) {
-    if (state.currentRoomId === data.room_id) {
-        state.currentRoomId = null;
-        showNoRoomSelected();
-    }
-    sendWebSocketMessage('get_rooms');
 }
 
 function handleRoomRenamed(data) {
@@ -497,14 +486,47 @@ function handleRoomRenamed(data) {
     }
 }
 
-function handleMembersUpdate(data) {
-    state.members[data.room_id] = data.members || [];
-    if (elements.membersModal && elements.membersModal.classList.contains('active')) {
-        renderMembers(data.room_id);
+function handleLeftRoom(data) {
+    if (state.currentRoomId === data.room_id) {
+        state.currentRoomId = null;
+        showNoRoomSelected();
     }
-    updateMembersCount(data.room_id);
+    sendWebSocketMessage('get_rooms');
 }
 
+function selectRoom(roomId) {
+    state.currentRoomId = roomId;
+    const room = state.rooms.find(r => r.ID === roomId);
+    
+    if (!room) return;
+
+    elements.currentRoomName.textContent = room.RoomName;
+    showChatContainer();
+    
+    markRoomAsRead(roomId);
+    sendWebSocketMessage('get_members', { room_id: roomId });
+    sendWebSocketMessage('get_messages', {
+        room_id: roomId,
+        limit: 50,
+        offset: 0
+    });
+
+    renderRooms();
+}
+
+function markRoomAsRead(roomId) {
+    sendWebSocketMessage('mark_read', { room_id: roomId });
+}
+
+async function handleCreateRoom(e) {
+    e.preventDefault();
+    const roomName = document.getElementById('new-room-name').value;
+
+    sendWebSocketMessage('create_room', { room_name: roomName });
+    
+    closeModal(elements.createRoomModal);
+    document.getElementById('new-room-name').value = '';
+}
 
 async function handleRenameRoom(e) {
     e.preventDefault();
@@ -519,7 +541,12 @@ async function handleRenameRoom(e) {
     document.getElementById('rename-room-name').value = '';
 }
 
-// ===== Room Functions =====
+async function handleLeaveRoom() {
+    showConfirm('Are you sure you want to leave this room?', 'Leave Room', () => {
+        sendWebSocketMessage('leave_room', { room_id: state.currentRoomId });
+    });
+}
+
 function renderRooms() {
     elements.roomsList.innerHTML = '';
 
@@ -574,83 +601,13 @@ function renderRooms() {
     });
 }
 
-
-function showNoRoomSelected() {
-    elements.noRoomSelected.style.display = 'flex';
-    elements.chatContainer.style.display = 'none';
-}
-
-function showChatContainer() {
-    elements.noRoomSelected.style.display = 'none';
-    elements.chatContainer.style.display = 'flex';
-}
-
-function showConfirm(message, title = 'Confirm', onOk) {
-    elements.confirmTitle.textContent = title;
-    elements.confirmMessage.textContent = message;
-    confirmCallback = onOk;
-    openModal(elements.confirmModal);
-}
-
-function selectRoom(roomId) {
-    state.currentRoomId = roomId;
-    const room = state.rooms.find(r => r.ID === roomId);
-    
-    if (!room) return;
-
-    elements.currentRoomName.textContent = room.RoomName;
-    showChatContainer();
-    
-    markRoomAsRead(roomId);
-
-    sendWebSocketMessage('get_members', { room_id: roomId });
-
-    sendWebSocketMessage('get_messages', {
-        room_id: roomId,
-        limit: 50,
-        offset: 0
-    });
-
-
-    renderRooms();
-}
-
-function markRoomAsRead(roomId) {
-    sendWebSocketMessage('mark_read', { room_id: roomId });
-}
-
-
-function sendWebSocketMessage(action, payload = {}) {
-    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
-        state.ws.send(JSON.stringify({ action, payload }));
-    } else {
-        console.error('WebSocket is not connected');
+// ===== MEMBERS HANDLERS =====
+function handleMembersUpdate(data) {
+    state.members[data.room_id] = data.members || [];
+    if (elements.membersModal && elements.membersModal.classList.contains('active')) {
+        renderMembers(data.room_id);
     }
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-
-async function handleCreateRoom(e) {
-    e.preventDefault();
-    const roomName = document.getElementById('new-room-name').value;
-
-    sendWebSocketMessage('create_room', { room_name: roomName });
-    
-    closeModal(elements.createRoomModal);
-    document.getElementById('new-room-name').value = '';
-}
-
-function closeModal(modal) {
-    modal.classList.remove('active');
-}
-
-function openModal(modal) {
-    modal.classList.add('active');
+    updateMembersCount(data.room_id);
 }
 
 function updateMembersCount(roomId) {
@@ -707,9 +664,6 @@ async function handleAddMember(e) {
         room_id: state.currentRoomId,
         login: username
     });
-    
-    //closeModal(elements.addMemberModal);
-    //document.getElementById('member-username').value = '';
 }
 
 function handleMemberAddedSuccessfully() {
@@ -724,10 +678,30 @@ function handleMemberAddedSuccessfully() {
     showNotification('Member added', 'success');
 }
 
-async function handleLeaveRoom() {
-    showConfirm('Are you sure you want to leave this room?', 'Leave Room', () => {
-        sendWebSocketMessage('leave_room', { room_id: state.currentRoomId });
-    });
+// ===== MESSAGES HANDLERS =====
+function handleMessagesUpdate(data) {
+    const { room_id, messages } = data;
+    state.messages[room_id] = messages || [];
+    
+    if (state.currentRoomId === room_id) {
+        renderMessages();
+    }
+}
+
+function handleNewMessage(data) {
+    const msg = data;
+    
+    if (!state.messages[msg.room_id]) {
+        state.messages[msg.room_id] = [];
+    }
+    
+    state.messages[msg.room_id].unshift(msg);
+    if (state.currentRoomId === msg.room_id) {
+        renderMessages();
+        markRoomAsRead(msg.room_id);
+    }
+    
+    sendWebSocketMessage('get_rooms');
 }
 
 function renderMessages() {
@@ -750,18 +724,18 @@ function renderMessages() {
         const messageEl = document.createElement('div');
         messageEl.className = 'message';
         
-        const isOwn = msg.user_id === state.user?.id || msg.nickname === state.user?.nickname;
+        const isOwn = msg.user_id === state.user?.id;
         if (isOwn) {
             messageEl.classList.add('own');
         }
 
         const initial = msg.nickname ? msg.nickname.charAt(0).toUpperCase() : '?';
-
+        const displayName = isOwn ? 'Вы' : (msg.nickname || 'Unknown');
         messageEl.innerHTML = `
             <div class="message-avatar">${initial}</div>
             <div class="message-content">
                 <div class="message-header">
-                    <span class="message-author">${escapeHtml(msg.nickname || 'Unknown')}</span>
+                    <span class="message-author">${escapeHtml(displayName || 'Unknown')}</span>
                     <span class="message-time">${formatTime(msg.created_at)}</span>
                 </div>
                 <div class="message-text">${escapeHtml(msg.content)}</div>
@@ -771,7 +745,6 @@ function renderMessages() {
         elements.messagesContainer.appendChild(messageEl);
     });
 
-    // Scroll to bottom (since we're using flex-direction: column-reverse)
     elements.messagesContainer.scrollTop = 0;
 }
 
@@ -789,8 +762,13 @@ function handleSendMessage(e) {
     elements.messageInput.value = '';
 }
 
+// ===== UTILITY FUNCTIONS =====
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
-// ===== Utility Functions =====
 function formatTime(timestamp) {
     if (!timestamp) return '';
     
@@ -798,30 +776,25 @@ function formatTime(timestamp) {
     const now = new Date();
     const diff = now - date;
     
-    // Less than 1 minute
     if (diff < 60000) {
         return 'Just now';
     }
     
-    // Less than 1 hour
     if (diff < 3600000) {
         const minutes = Math.floor(diff / 60000);
         return `${minutes}m ago`;
     }
     
-    // Less than 24 hours
     if (diff < 86400000) {
         const hours = Math.floor(diff / 3600000);
         return `${hours}h ago`;
     }
     
-    // Less than 7 days
     if (diff < 604800000) {
         const days = Math.floor(diff / 86400000);
         return `${days}d ago`;
     }
     
-    // Format as date
     return date.toLocaleDateString();
 }
 
