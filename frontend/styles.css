@@ -1,12 +1,9 @@
-/* ===== RESET ===== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-
-/* ===== GLOBAL ===== */
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     background: #f0f2f5;
@@ -14,7 +11,6 @@ body {
     overflow: hidden;
 }
 
-/* ===== SCREENS ===== */
 .screen {
     display: none;
     width: 100vw;
@@ -26,129 +22,127 @@ body {
 }
 
 .auth-form {
-    display: none;               /* Скрыты по умолчанию */
+    display: none;
 }
 
 .auth-form.active {
-    display: block;              /* Активная форма видима */
+    display: block;
 }
 
 .auth-container {
-    display: flex;               /* Включаем Flexbox */
-    align-items: center;         /* Выравнивание по вертикали (центр) */
-    justify-content: center;     /* Выравнивание по горизонтали (центр) */
-    min-height: 100vh;           /* Минимальная высота на весь экран */
-    background: linear-gradient(135deg, #b51f1f 0%, #0e37b1 100%); /* Градиент */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #b51f1f 0%, #0e37b1 100%);
 }
 
 .auth-box {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Градиентный фон */
-    padding: 3rem;               /* Внутренние отступы: сверху/снизу 3rem, слева/справа 3rem */
-    border-radius: 12px;         /* Скругление углов 12 пикселей */
-    box-shadow: 0 10px 40px #ffffff; /* Тень: смещениеY 10px, размытие 40px */
-    width: 100%;                 /* Ширина 100% от родителя */
-    max-width: 420px;            /* Максимальная ширина 420px (не растянется шире) */
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px #ffffff;
+    width: 100%;
+    max-width: 420px;
 }
 
 .auth-box h2 {
-    background: linear-gradient(135deg, #000000 0%, #000000 100%); /* Градиент */
-    -webkit-background-clip: text; /* Обрезаем фон под текст (WebKit) */
-    -webkit-text-fill-color: transparent; /* Делаем текст прозрачным, виден градиент */
-    background-clip: text;       /* Обрезаем фон под текст (стандарт) */
-    margin-bottom: 1.5rem; 
+    background: linear-gradient(135deg, #000000 0%, #000000 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
     font-size: 1.5rem;
 }
 
 .auth-title {
-    background: linear-gradient(135deg, #0040ff 0%, #d80000 100%); /* Градиент */
-    text-align: center;          /* Текст по центру */
-    font-size: 2rem;             /* Размер шрифта 32px (2rem = 32px) */
-    margin-bottom: 2rem;         /* Отступ снизу 32px */
-    -webkit-background-clip: text; /* Обрезаем фон под текст (WebKit) */
-    -webkit-text-fill-color: transparent; /* Делаем текст прозрачным, виден градиент */
-    background-clip: text;       /* Обрезаем фон под текст (стандарт) */
+    background: linear-gradient(135deg, #0040ff 0%, #d80000 100%);
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .input-group {
-    margin-bottom: 1.25rem;      /* Отступ снизу 20px */
+    margin-bottom: 1.25rem;
 }
 
 .input-group label {
-    background: linear-gradient(135deg, #061a56 0%, #4e0c0c 100%); /* Градиент */
-    -webkit-background-clip: text; /* Обрезаем фон под текст (WebKit) */
-    -webkit-text-fill-color: transparent; /* Делаем текст прозрачным, виден градиент */
-    background-clip: text;       /* Обрезаем фон под текст (стандарт) */
-
-    display: block;              /* Метка как блочный элемент (занимает всю ширину) */
-    margin-bottom: 0.5rem;       /* Отступ снизу 8px */
-    font-size: 1.0rem;           /* Размер шрифта ~14.4px */
-    font-weight: 500;            /* Полужирное начертание */
+    background: linear-gradient(135deg, #061a56 0%, #4e0c0c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1.0rem;
+    font-weight: 500;
 }
 
 .input-group input {
-    background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%); /* Градиент */
-    width: 100%;                 /* Поле ввода на всю ширину родителя */
-    padding: 0.75rem 1rem;       /* Внутренние отступы: сверху/снизу 12px, слева/справа 16px */
-    border: 2px solid #e4e6eb; /* Граница 2px серого цвета */
-    border-radius: 12px;          /* Скругление 8px */
-    font-size: 1rem;             /* Размер шрифта 16px */
-    transition: all 0.3s;        /* Плавная анимация всех свойств за 0.3 секунды */
+    background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e4e6eb;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s;
 }
 
 .input-group input:focus {
-    outline: none;               /* Убираем стандартный outline браузера */
-    border-color: #002aff; /* Граница становится синей при фокусе */
+    outline: none;
+    border-color: #002aff;
 }
 
 .btn {
-    width: 100%;                 /* Кнопка на всю ширину */
-    padding: 0.75rem 1.5rem;     /* Отступы: 12px сверху/снизу, 24px слева/справа */
-    border: none;                /* Убираем границу */
-    border-radius: 12px;          /* Скругление 8px */
-    font-size: 1rem;             /* Размер текста 16px */
-    font-weight: 600;            /* Жирное начертание */
-    cursor: pointer;             /* Курсор-указатель при наведении */
-    transition: all 0.3s;        /* Анимация всех свойств 0.3с */
-    display: inline-flex;        /* Инлайн-флекс для центрирования содержимого */
-    align-items: center;         /* Центрирование по вертикали */
-    justify-content: center;     /* Центрирование по горизонтали */
-    gap: 0.5rem;                 /* Расстояние между элементами внутри 8px */
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #d80000 0%, #0040ff 100%); /* Градиентный фон */
-    color: white;                /* Белый текст */
+    background: linear-gradient(135deg, #d80000 0%, #0040ff 100%);
+    color: white;
 }
 
-.btn-primary.danger{
-    background: linear-gradient(135deg, #d80000 0%, #ff00c3 100%); /* Градиентный фон */
-    color: rgb(68, 0, 255);  
-    max-width: 10%;         
+.btn-primary.danger {
+    background: linear-gradient(135deg, #d80000 0%, #ff00c3 100%);
+    color: rgb(68, 0, 255);
+    max-width: 10%;
 }
 
 .btn-primary.danger:hover {
-    transform: translateY(2px); /* Поднимаем кнопку вверх на 2px при наведении */
-    box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);   ; /* Тень */
+    transform: translateY(2px);
+    box-shadow: 0 5px 15px rgba(255, 0, 0, 0.3);
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px); /* Поднимаем кнопку вверх на 2px при наведении */
-    box-shadow: 0 5px 15px; /* Тень */
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px;
 }
 
-
-.btn-icon{
+.btn-icon {
     background: transparent;
     border: none;
     cursor: pointer;
-    color: #ffffff; 
+    color: #ffffff;
 }
 
 .btn-icon:hover {
-    color: #f3a73d;  /* Темный цвет иконки */
+    color: #f3a73d;
 }
 
-.btn-icon.dark{
+.btn-icon.dark {
     color: #000000;
 }
 
@@ -162,24 +156,24 @@ body {
 }
 
 .auth-switch {
-    margin-top: 1.5rem;          /* Отступ сверху 24px */
-    text-align: center;          /* Текст по центру */
-    color: #00d0ff; /* Серый цвет */
+    margin-top: 1.5rem;
+    text-align: center;
+    color: #00d0ff;
 }
 
 .auth-switch button {
     background: linear-gradient(135deg, #c42a2a 0%, #5577de 100%);
-    padding: 0.3rem 0.3rem;     /* Отступы: сверху/снизу, слева/справа */
-    border: none;                /* Убираем границу */
-    border-radius: 12px;          /* Скругление 8px */
-    font-size: 0.9rem;             /* Размер текста 16px */
-    font-weight: 600;            /* Жирное начертание */
-    cursor: pointer;             /* Курсор-указатель при наведении */
-    transition: all 0.3s;        /* Анимация всех свойств 0.3с */
-    display: inline-flex;        /* Инлайн-флекс для центрирования содержимого */
-    align-items: center;         /* Центрирование по вертикали */
-    justify-content: center;     /* Центрирование по горизонтали */
-    gap: 0.5rem;                 /* Расстояние между элементами внутри 8px */
+    padding: 0.3rem 0.3rem;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 .error-message {
@@ -208,7 +202,6 @@ body {
     margin: 1rem 0;
 }
 
-/*APP*/
 .app-container {
     display: flex;
     align-items: center;
@@ -222,17 +215,12 @@ body {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 12px;
     box-shadow: 0 5px 15px;
-    /*
-    width: 70%;
-    /height: 70%;
-    */
     width: 1000px;
     height: 800px;
     display: flex;
     overflow: hidden;
 }
 
-/* Сайдбар */
 .sidebar {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-right: 2px solid #4c4646;
@@ -244,34 +232,33 @@ body {
     flex-direction: column;
 }
 
-/* Шапка сайдбара */
 .sidebar-header {
-    padding: 2.5rem 1.5rem;    /* Отступы: сверху/снизу, слева/справа */
-    border-bottom: 1px solid #7185e8; /* Нижняя граница */
+    padding: 2.5rem 1.5rem;
+    border-bottom: 1px solid #7185e8;
 }
 
 .app-title {
-    background: linear-gradient(135deg, #0040ff 0%, #d80000 100%); /* Градиент */
-    text-align: center;          /* Текст по центру */
-    font-size: 2rem;             /* Размер шрифта 32px (2rem = 32px) */
-    margin-bottom: 0.7rem;         /* Отступ снизу 32px */
-    -webkit-background-clip: text; /* Обрезаем фон под текст (WebKit) */
-    -webkit-text-fill-color: transparent; /* Делаем текст прозрачным, виден градиент */
-    background-clip: text;       /* Обрезаем фон под текст (стандарт) */
+    background: linear-gradient(135deg, #0040ff 0%, #d80000 100%);
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 0.7rem;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .user-info {
-    display: flex;              /* Флекс для информации о пользователе */
-    align-items: center;        /* Выравнивание по центру вертикали */
-    justify-content: space-between; /* Пространство между элементами */
-    color: #000000; /* Серый текст */
-    font-size: 1.1rem;          /* Размер ~14px */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #000000;
+    font-size: 1.1rem;
 }
 
 .user-details {
     display: flex;
     align-items: center;
-    gap: 0.75rem; /* Расстояние между аватаром и ником */
+    gap: 0.75rem;
 }
 
 .avatar {
@@ -282,13 +269,10 @@ body {
     flex-shrink: 0;
 }
 
-
-/* Список комнат */
 .rooms-list {
-    flex: 1;                    /* Занимает всё оставшееся пространство */
-    overflow-y: auto;           /* Вертикальная прокрутка при необходимости */
+    flex: 1;
+    overflow-y: auto;
 }
-
 
 .rooms-list::-webkit-scrollbar {
     width: 6px;
@@ -309,45 +293,43 @@ body {
     background: rgba(255, 255, 255, 0.6);
 }
 
-/* Элемент комнаты */
 .room-item {
     background: linear-gradient(135deg, #aa70e5 0%, #b8c5ff 100%);
-    padding: 0.5rem 1.5rem;       /* Отступы 16px и 24px */
-    cursor: pointer;            /* Курсор-указатель */
-    transition: background 0.2s; /* Плавная смена фона за 0.2с */
+    padding: 0.5rem 1.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
     border-bottom: 1px solid #5b6bba;
-    position: relative;         /* Для позиционирования бейджа непрочитанных */
+    position: relative;
 }
 
 .room-item:hover {
-    background: linear-gradient(135deg, #a76ae4 0%, #6f89ff 100%); /* Серый фон при наведении */
+    background: linear-gradient(135deg, #a76ae4 0%, #6f89ff 100%);
 }
 
-
 .room-item.active {
-    background: linear-gradient(135deg, #a079c7 0%, #95a8fd 100%); /* Активная комната — серый фон */
-    border-left: 3px solid #3153fd; 
+    background: linear-gradient(135deg, #a079c7 0%, #95a8fd 100%);
+    border-left: 3px solid #3153fd;
 }
 
 .room-header {
-    display: flex;              
+    display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 0rem;   
-    margin-bottom: 0.25rem;    
+    margin-top: 0rem;
+    margin-bottom: 0.25rem;
 }
 
 .room-name {
-    font-weight: 600;           /* Полужирный */
+    font-weight: 600;
     background: linear-gradient(135deg, #d80000 0%, #0040ff 100%);
-    -webkit-background-clip: text; /* Обрезаем фон под текст (WebKit) */
-    -webkit-text-fill-color: transparent; /* Делаем текст прозрачным, виден градиент */
-    background-clip: text;       /* Обрезаем фон под текст (стандарт) */
-    font-size: 1rem;            /* 16px */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1rem;
 }
 
 .room-time {
-    font-size: 0.75rem;         /* 12px */
+    font-size: 0.75rem;
     color: #000000;
 }
 
@@ -366,7 +348,7 @@ body {
     text-overflow: ellipsis;
     flex: 1;
     min-width: 0;
-    width: 0; /* Ключевое свойство - заставляет элемент сжиматься */
+    width: 0;
 }
 
 .unread-badge {
@@ -387,7 +369,6 @@ body {
     display: none;
 }
 
-/* Пустое состояние */
 .empty-state {
     flex: 1;
     display: flex;
@@ -448,17 +429,15 @@ body {
     outline: none;
 }
 
-
-/* МОДАЛЬНЫЕ ОКНА */
 .modal {
-    display: none;              /* Скрыты по умолчанию */
-    position: fixed;            /* Фиксированное позиционирование (поверх всего) */
+    display: none;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон (затемнение) */
-    z-index: 1000;              /* Высокий z-index (поверх всего) */
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
     align-items: center;
     justify-content: center;
 }
@@ -467,25 +446,25 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.5rem;     
+    margin-bottom: 1.5rem;
 }
 
 .modal-header h3 {
     background: linear-gradient(135deg, #d80000 0%, #0040ff 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;     
-    font-size: 1.5rem;    
+    background-clip: text;
+    font-size: 1.5rem;
 }
 
 .modal-content {
     background: linear-gradient(135deg, #aa70e5 0%, #b8c5ff 100%);
     border-radius: 12px;
-    padding: 2rem;              /* 32px со всех сторон */
-    width: 90%;                 /* 90% ширины на мобильных */
-    max-width: 450px;           /* Максимум 450px на десктопе */
-    box-shadow: 0 10px 40px ;
-    animation: modalSlideIn 0.3s; /* Анимация появления */
+    padding: 2rem;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: 0 10px 40px;
+    animation: modalSlideIn 0.3s;
 }
 
 .modal.active {
@@ -514,15 +493,14 @@ body {
 
 .modal-actions {
     display: flex;
-    gap: 2.5rem;     
-    margin-top: 1.5rem;        
+    gap: 2.5rem;
+    margin-top: 1.5rem;
 }
 
 .modal-cancel:hover {
     background: #9e9e9e;
 }
 
-/* Анимация появления модалки */
 @keyframes modalSlideIn {
     from {
         opacity: 0;
@@ -535,12 +513,12 @@ body {
 }
 
 .modal-actions .btn {
-    width: auto;       
+    width: auto;
     flex: 1;
 }
 
 .main-chat {
-    flex: 1;                    /* Занимает всё оставшееся пространство */
+    flex: 1;
     display: flex;
     flex-direction: column;
 }
@@ -548,13 +526,13 @@ body {
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: 100%;               /* На всю высоту родителя */
+    height: 100%;
 }
 
 .chat-header {
     background: linear-gradient(135deg, #aa70e5 0%, #b8c5ff 100%);
     border-bottom: 1px solid #5b6bba;
-    padding: 1rem 1.5rem;       /* 16px 24px */
+    padding: 1rem 1.5rem;
     border-radius: 12px;
     display: flex;
     justify-content: space-between;
@@ -570,26 +548,26 @@ body {
 }
 
 .chat-header-info h2 {
-    font-size: 1.25rem;         /* 20px */
-    margin-bottom: 0.25rem;     /* 4px */
+    font-size: 1.25rem;
+    margin-bottom: 0.25rem;
     background: linear-gradient(135deg, #d80000 0%, #0040ff 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;     
-    font-size: 1.5rem;   
+    background-clip: text;
+    font-size: 1.5rem;
 }
 
 .members-count {
-    font-size: 0.75rem;        /* 14px */
+    font-size: 0.75rem;
     color: #000000;
 }
 
 .chat-header-actions {
     display: flex;
-    gap: 0.5rem;             /* Расстояние между кнопкой и счетчиком */
+    gap: 0.5rem;
 }
 
-.chat-header-actions .btn{
+.chat-header-actions .btn {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -598,11 +576,9 @@ body {
     gap: 0rem;
 }
 
-
-/* Members */
 .members-list {
-    max-height: 50%;          /* Максимальная высота 400px */
-    overflow-y: auto;           /* Прокрутка при превышении */
+    max-height: 50%;
+    overflow-y: auto;
 }
 
 .members-list::-webkit-scrollbar {
@@ -625,7 +601,7 @@ body {
 }
 
 .member-item {
-    padding: 1rem; 
+    padding: 1rem;
     border-bottom: 1px solid #5b6bba;
     display: flex;
     align-items: center;
@@ -634,7 +610,7 @@ body {
 }
 
 .member-item:last-child {
-    border-bottom: none;        /* У последнего элемента убираем границу */
+    border-bottom: none;
 }
 
 .member-avatar {
@@ -658,12 +634,12 @@ body {
 .member-nickname {
     font-size: 1.2rem;
     font-weight: 600;
-    margin-bottom: 0.0rem;     /* 4px */
+    margin-bottom: 0.0rem;
     color: #000000;
 }
 
 .member-login {
-    font-size: 0.75rem;        /* 14px */
+    font-size: 0.75rem;
     color: #3863e3;
 }
 
@@ -678,11 +654,11 @@ body {
 
 .messages-container {
     flex: 1;
-    overflow-y: auto;           /* Вертикальная прокрутка */
-    padding: 1.5rem;            /* 24px со всех сторон */
+    overflow-y: auto;
+    padding: 1.5rem;
     display: flex;
-    flex-direction: column-reverse; /* Сообщения снизу вверх (новые снизу) */
-    gap: 1rem;                  /* Расстояние между сообщениями 16px */
+    flex-direction: column-reverse;
+    gap: 1rem;
     border-radius: 12px;
     background: linear-gradient(135deg, #9b57df 0%, #506ef4 100%);
     box-shadow: 0 10px 10px;
@@ -708,38 +684,34 @@ body {
     background: rgba(255, 255, 255, 0.6);
 }
 
-
-
-
-/* Отдельное сообщение */
 .message {
     display: flex;
-    gap: 0.5rem;               /* 12px между аватаром и текстом */
-    max-width: 70%;             /* Максимальная ширина 70% */
-    animation: fadeIn 0.3s;     /* Анимация появления 0.3с */
+    gap: 0.5rem;
+    max-width: 70%;
+    animation: fadeIn 0.3s;
 }
-/* Свое сообщение (от текущего пользователя) */
+
 .message.own {
-    align-self: flex-end;       /* Прижимаем к правому краю */
-    flex-direction: row-reverse; /* Аватар справа от текста */
+    align-self: flex-end;
+    flex-direction: row-reverse;
 }
 
 .message-avatar {
     width: 40px;
     height: 40px;
-    border-radius: 50%;       
-    background: linear-gradient(135deg, #0040ff 0%, #d80000 100%); /* Градиент */
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0040ff 0%, #d80000 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
     font-weight: 600;
-    flex-shrink: 0;            
+    flex-shrink: 0;
 }
 
 .message-content {
     flex: 1;
-    background: linear-gradient(170deg, #57d3f3 50%, #e99c9c 100%); /* Белый фон для чужих сообщений */
+    background: linear-gradient(170deg, #57d3f3 50%, #e99c9c 100%);
     padding: 0.75rem 1rem;
     border-radius: 18px;
     flex: 0 1 auto;
@@ -750,14 +722,14 @@ body {
 
 .message-header {
     display: flex;
-    align-items: baseline;      /* Выравнивание по базовой линии текста */
-    gap: 0.5rem;                /* 8px */
-    margin-bottom: 0.25rem;     /* 4px */
+    align-items: baseline;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .message-author {
     font-weight: 600;
-    font-size: 0.875rem;        /* 14px */
+    font-size: 0.875rem;
     color: #000000;
     background: linear-gradient(135deg, #aa70e5 0%, #b8c5ff 100%);
     border-radius: 12px;
@@ -770,18 +742,18 @@ body {
     border-radius: 12px;
     display: inline-block;
     padding: 0.2rem 0.7rem;
-    font-size: 0.75rem;         /* 12px */
+    font-size: 0.75rem;
     color: #000000;
-    margin-left: auto; /* Прижимает время к правому краю */
+    margin-left: auto;
     flex-shrink: 0;
 }
+
 .message.own .message-author {
     background: linear-gradient(135deg, #00ff48 0%, #b8c5ff 100%);
 }
 
-
 .message-text {
-    color:#0b3881;
+    color: #0b3881;
     font-weight: 600;
     font-size: 0.9375rem;
     line-height: 1.5;
@@ -789,23 +761,20 @@ body {
     word-break: break-word;
 }
 
-
-
-/* Анимация появления сообщения */
 @keyframes fadeIn {
     from {
-        opacity: 0;             /* Прозрачность 0% */
-        transform: translateY(10px); /* Сдвиг вниз на 10px */
+        opacity: 0;
+        transform: translateY(10px);
     }
     to {
-        opacity: 1;             /* Полностью видимое */
-        transform: translateY(0); /* Исходная позиция */
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 
 .message-input-container {
     background: linear-gradient(135deg, #aa70e5 0%, #b8c5ff 100%);
-    padding: 1rem 1.5rem;       /* 16px 24px */
+    padding: 1rem 1.5rem;
     border-top: 1px solid #0084ff;
     border-radius: 12px;
     box-shadow: 0 -5px 10px;
@@ -814,9 +783,8 @@ body {
 
 .message-input-container form {
     display: flex;
-    gap: 0.75rem;               /* 12px между полем и кнопкой */
+    gap: 0.75rem;
 }
-
 
 #message-input {
     background: #adecfb;
@@ -828,13 +796,12 @@ body {
     transition: all 0.3s;
 }
 
-
 #message-input:focus {
     outline: none;
     border-color: #00d0ff;
 }
 
-.btn-primary.btn-send{
+.btn-primary.btn-send {
     width: 44px;
     height: 44px;
     border: none;
@@ -861,4 +828,3 @@ body {
     transition: all 0.3s;
     transform: rotate(-45deg);
 }
-
