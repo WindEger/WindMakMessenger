@@ -82,9 +82,10 @@ const elements = {
     messageInput: document.getElementById('message-input'),
 }
 
-const API_HOST = 'localhost:50505';
-const API_BASE = `http://${API_HOST}`;
-const wsUrl = `ws://${API_HOST}/ws?token=${state.token}`;
+const API_BASE = '';
+const getWsUrl = () => `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws?token=${state.token}`;
+const API_HOST = window.location.host;
+
 
 let confirmCallback = null;
 
